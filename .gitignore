@@ -1,0 +1,37 @@
+﻿# Keil build outputs
+**/Objects/
+**/Listings/
+**/DebugConfig/
+*.o
+*.d
+*.crf
+*.axf
+*.hex
+*.map
+*.lst
+*.lnp
+*.htm
+*.build_log.htm
+
+# Keil user/session files
+*.uvguix.*
+*.uvgui.*
+*.uvoptx
+*.uvopt
+*.bak
+JLinkLog.txt
+JLinkSettings.ini
+EventRecorderStub.scvd
+
+# archives/installers/tools
+*.zip
+*.rar
+*.7z
+*.exe
+*.iso
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
