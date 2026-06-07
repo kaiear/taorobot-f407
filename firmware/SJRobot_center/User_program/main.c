@@ -120,14 +120,21 @@ int main(void)
 	}
 //	printf("sumx=%f, sumy=%f, sumz=%f",sumx/200.0,sumy/200.0,sumz/200.0);
 	beep_on_times(3, 100);
-
-	Task_Manage_List_Init();
-	while (1)
-	{
-		Execute_Task_List_RUN();
-		//printf("J0%d J1%d J2%d J3%d J4%d J5%d \r\n ",
-		//ros_servo.pwm[0],ros_servo.pwm[1],ros_servo.pwm[2],ros_servo.pwm[3],ros_servo.pwm[4],ros_servo.pwm[5]);
-	}
+ Task_Manage_List_Init();
+    while (1)
+    {
+        // 1. 先让系统原本的任务跑一轮，这样它就会去读硬件编码器，更新 Wheel_A.RT 参数
+        Execute_Task_List_RUN();
+        
+        // 2. 系统任务执行完后，原本它可能会因为目标速度是0，向电机下发速度0
+        // 我们在这里立刻“半路打劫”，用强制指令把速度覆盖成 500，单独测试一个电机
+        MOTOR_A_SetSpeed(500); 
+        MOTOR_B_SetSpeed(500);  // 其余轮子停止
+        MOTOR_C_SetSpeed(500);
+        MOTOR_D_SetSpeed(500);
+        
+        Delay_ms(10);
+    }
 }
 
 void soft_reset(void)

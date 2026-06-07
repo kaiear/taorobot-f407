@@ -57,10 +57,10 @@ void ROBOT_Kinematics(void)
 	Wheel_D.PWM = SPEED_PidCtlD(Wheel_D.TG, Wheel_D.RT);  
 	
 	//设置电机PWM值
-	MOTOR_A_SetSpeed( -Wheel_A.PWM);
-	MOTOR_B_SetSpeed( Wheel_B.PWM);  
-	MOTOR_C_SetSpeed(-Wheel_C.PWM);
-	MOTOR_D_SetSpeed(Wheel_D.PWM); 
+	//MOTOR_A_SetSpeed( -Wheel_A.PWM);
+	//MOTOR_B_SetSpeed( Wheel_B.PWM);  
+	//MOTOR_C_SetSpeed(-Wheel_C.PWM);
+	//MOTOR_D_SetSpeed(Wheel_D.PWM); 
 	
 //	printf("A%f B%f C%f D%f \r\n ",Wheel_A.RT,Wheel_B.RT, Wheel_C.RT, Wheel_D.RT  );
 //	printf("A%f B%f C%f D%f \r\n ",Wheel_A.TG,Wheel_B.TG, Wheel_C.TG, Wheel_D.TG  );
