@@ -10,6 +10,9 @@ __ALIGN_BEGIN USB_OTG_CORE_HANDLE USB_OTG_Core_dev __ALIGN_END;
 __ALIGN_BEGIN USBH_HOST USB_Host __ALIGN_END;
 extern HID_Machine_TypeDef HID_Machine;
 
+#define ENABLE_MOTOR_FORCE_TEST 0
+#define MOTOR_FORCE_TEST_SPEED  500
+
 int main(void)
 	
 {
@@ -123,15 +126,14 @@ int main(void)
  Task_Manage_List_Init();
     while (1)
     {
-        // 1. 先让系统原本的任务跑一轮，这样它就会去读硬件编码器，更新 Wheel_A.RT 参数
         Execute_Task_List_RUN();
-        
-        // 2. 系统任务执行完后，原本它可能会因为目标速度是0，向电机下发速度0
-        // 我们在这里立刻“半路打劫”，用强制指令把速度覆盖成 500，单独测试一个电机
-        MOTOR_A_SetSpeed(500); 
-        MOTOR_B_SetSpeed(500);  // 其余轮子停止
-        MOTOR_C_SetSpeed(500);
-        MOTOR_D_SetSpeed(500);
+
+#if ENABLE_MOTOR_FORCE_TEST
+        MOTOR_A_SetSpeed(MOTOR_FORCE_TEST_SPEED);
+        MOTOR_B_SetSpeed(MOTOR_FORCE_TEST_SPEED);
+        MOTOR_C_SetSpeed(MOTOR_FORCE_TEST_SPEED);
+        MOTOR_D_SetSpeed(MOTOR_FORCE_TEST_SPEED);
+#endif
         
         Delay_ms(10);
     }

@@ -67,6 +67,7 @@ tao-stm32-firmware/
 | `docs/motor_mapping.md` | 电机 A/B/C/D、底层接口、速度范围、麦轮运动学记录 |
 | `docs/servo_mapping.md` | 6 路舵机接口、PWM 范围、特殊反向通道记录 |
 | `docs/serial_protocol.md` | USART2 和树莓派/ROS 通信协议记录 |
+| `docs/project_execution_plan.md` | 自动巡检机械臂小车总体路线、上/下位机边界和组员分工 |
 | `docs/team_git_workflow.md` | 组员如何拉取、提交、协作、避免冲突的说明 |
 
 ### 5.3 firmware/SJRobot_center/
