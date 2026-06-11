@@ -2,6 +2,7 @@
 
 uint8_t ps2_buf[12];
 uint8_t ps2_do_ok = 0;
+#define GAMEPAD_RAW_DEBUG 1
 static void GAMEPAD_Init(void);
 static void GAMEPAD_Decode(u8 *data);
 
@@ -11,18 +12,37 @@ HID_cb_TypeDef HID_GAMEPAD_cb =
 		GAMEPAD_Decode,
 };
 
-// game pad ³õÊ¼»¯
+// game pad ï¿½ï¿½Ê¼ï¿½ï¿½
 static void GAMEPAD_Init(void)
 {
 	USR_GAMEPAD_Init();
 }
 
-// game padÊý¾Ý½âÎö
+// game padï¿½ï¿½ï¿½Ý½ï¿½ï¿½ï¿½
 static void GAMEPAD_Decode(uint8_t *data)
 {
 	u8 i;
+#if GAMEPAD_RAW_DEBUG
+	static uint16_t debug_count = 0;
 
-	if (data[0] == 0X07) /* µÚ1£¬2¸ö×Ö½Ú¿ªÊ¼ */
+	debug_count++;
+	if (debug_count <= 20 || debug_count >= 100)
+	{
+		if (debug_count >= 100)
+		{
+			debug_count = 21;
+		}
+		printf("decode enter %d\r\n", debug_count);
+		printf("hid raw:");
+		for (i = 0; i < 12; i++)
+		{
+			printf(" %02X", data[i]);
+		}
+		printf("\r\n");
+	}
+#endif
+
+	if (data[0] == 0X07) /* ï¿½ï¿½1ï¿½ï¿½2ï¿½ï¿½ï¿½Ö½Ú¿ï¿½Ê¼ */
 	{
 		for (i = 0; i < 12; i++)
 		{

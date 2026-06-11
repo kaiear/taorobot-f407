@@ -108,6 +108,7 @@ __ALIGN_BEGIN USB_Setup_TypeDef HID_Setup __ALIGN_END;
 __ALIGN_BEGIN USBH_HIDDesc_TypeDef HID_Desc __ALIGN_END;
 
 __IO uint8_t start_toggle = 0;
+#define HID_URB_DEBUG 1
 /**
  * @}
  */
@@ -430,6 +431,11 @@ static USBH_Status USBH_HID_Handle(USB_OTG_CORE_HANDLE *pdev,
 {
   USBH_HOST *pphost = phost;
   USBH_Status status = USBH_OK;
+#if HID_URB_DEBUG
+  static URB_STATE last_urb_state = URB_IDLE;
+  static uint16_t get_data_count = 0;
+  static uint16_t poll_timeout_count = 0;
+#endif
 
   switch (HID_Machine.state)
   {
@@ -453,6 +459,17 @@ static USBH_Status USBH_HID_Handle(USB_OTG_CORE_HANDLE *pdev,
                               HID_Machine.buff,
                               HID_Machine.length,
                               HID_Machine.hc_num_in);
+#if HID_URB_DEBUG
+    get_data_count++;
+    if (get_data_count <= 10 || get_data_count >= 100)
+    {
+      if (get_data_count >= 100)
+      {
+        get_data_count = 11;
+      }
+      printf("hid get data len=%d poll=%d hc=%d\r\n", HID_Machine.length, HID_Machine.poll, HID_Machine.hc_num_in);
+    }
+#endif
     start_toggle = 1;
 
     HID_Machine.state = HID_POLL;
@@ -460,19 +477,27 @@ static USBH_Status USBH_HID_Handle(USB_OTG_CORE_HANDLE *pdev,
     break;
 
   case HID_POLL:
-    if ((HCD_GetCurrentFrame(pdev) - HID_Machine.timer) >= HID_Machine.poll)
+  {
+    URB_STATE urb_state = HCD_GetURB_State(pdev, HID_Machine.hc_num_in);
+
+#if HID_URB_DEBUG
+    if (urb_state != last_urb_state)
     {
-      HID_Machine.state = HID_GET_DATA;
+      last_urb_state = urb_state;
+      printf("hid urb state=%d\r\n", urb_state);
     }
-    else if (HCD_GetURB_State(pdev, HID_Machine.hc_num_in) == URB_DONE)
+#endif
+
+    if (urb_state == URB_DONE)
     {
       if (start_toggle == 1) /* handle data once */
       {
         start_toggle = 0;
         HID_Machine.cb->Decode(HID_Machine.buff);
       }
+      HID_Machine.state = HID_GET_DATA;
     }
-    else if (HCD_GetURB_State(pdev, HID_Machine.hc_num_in) == URB_STALL) /* IN Endpoint Stalled */
+    else if (urb_state == URB_STALL) /* IN Endpoint Stalled */
     {
 
       /* Issue Clear Feature on interrupt IN endpoint */
@@ -485,7 +510,28 @@ static USBH_Status USBH_HID_Handle(USB_OTG_CORE_HANDLE *pdev,
         HID_Machine.state = HID_GET_DATA;
       }
     }
+    else if (urb_state == URB_ERROR)
+    {
+      printf("hid urb error\r\n");
+      HID_Machine.state = HID_GET_DATA;
+    }
+    else if ((HCD_GetCurrentFrame(pdev) - HID_Machine.timer) >= HID_Machine.poll)
+    {
+#if HID_URB_DEBUG
+      poll_timeout_count++;
+      if (poll_timeout_count <= 10 || poll_timeout_count >= 100)
+      {
+        if (poll_timeout_count >= 100)
+        {
+          poll_timeout_count = 11;
+        }
+        printf("hid poll timeout urb=%d\r\n", urb_state);
+      }
+#endif
+      HID_Machine.state = HID_GET_DATA;
+    }
     break;
+  }
 
   default:
     break;

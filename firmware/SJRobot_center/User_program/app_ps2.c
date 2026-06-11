@@ -2,6 +2,16 @@
 #include "usbh_hid_gamepad.h"
 
 #define PSX_BUTTON_NUM 16 // 手柄按键数目
+#define ENABLE_PS2_CHASSIS_CONTROL 1
+#define PS2_DEBUG_PRINT 1
+#define PS2_DEADZONE 20
+#define PS2_MOVE_SCALE 2
+#define PS2_TURN_SCALE 6
+#define PS2_MAX_MOVE_SPEED 300
+#define PS2_MAX_TURN_SPEED 600
+#define PS2_TIMEOUT_COUNT 100
+#define PS2_CAPTURE_THRESHOLD 60
+
 u8 uart_receive_buf[128];
 
 /* PS2手柄接收数据
@@ -38,12 +48,71 @@ static u16 ps2_cmd = 0;
 static u16 ps2_cmd_last = 0;
 static u16 ps2_status_flag = 0xffff;
 
+static short ps2_limit_speed(short value, short limit)
+{
+    if (value > limit)
+        return limit;
+    if (value < -limit)
+        return -limit;
+    return value;
+}
+
+static short ps2_axis_to_speed(u8 raw_value, short scale, short limit)
+{
+    short value;
+
+    if (abs(128 - raw_value) <= PS2_DEADZONE)
+        return 0;
+
+    value = (128 - raw_value) * scale;
+    return ps2_limit_speed(value, limit);
+}
+
+static const char *ps2_capture_label(void)
+{
+    short lx = 128 - ps2_buf[0];
+    short ly = 128 - ps2_buf[1];
+    short rx = 128 - ps2_buf[2];
+
+    if (ly > PS2_CAPTURE_THRESHOLD)
+        return "LEFT_STICK_FORWARD";
+    if (ly < -PS2_CAPTURE_THRESHOLD)
+        return "LEFT_STICK_BACKWARD";
+    if (lx > PS2_CAPTURE_THRESHOLD)
+        return "LEFT_STICK_LEFT";
+    if (lx < -PS2_CAPTURE_THRESHOLD)
+        return "LEFT_STICK_RIGHT";
+    if (rx > PS2_CAPTURE_THRESHOLD)
+        return "RIGHT_STICK_LEFT";
+    if (rx < -PS2_CAPTURE_THRESHOLD)
+        return "RIGHT_STICK_RIGHT";
+
+    return "CENTER";
+}
+
+static void ps2_stop_chassis(void)
+{
+    Vel.TG_IX = 0;
+    Vel.TG_IY = 0;
+    Vel.TG_IW = 0;
+}
+
 void app_ps2(void)
 {
     uint16_t pos;
+    static u16 ps2_lost_count = 0;
+    static u16 ps2_debug_count = 0;
+
     // 或者ps2没有读取数据，直接返回
     if (!ps2_do_ok)
+    {
+        if (ps2_lost_count < PS2_TIMEOUT_COUNT)
+            ps2_lost_count++;
+        else
+            ps2_stop_chassis();
         return;
+    }
+    ps2_lost_count = 0;
     ps2_do_ok = 0;
 
     ps2_cmd_last = ps2_cmd;
@@ -169,55 +238,21 @@ void app_ps2(void)
         ps2_status_flag = ps2_cmd;
     }
 
-   /* 推动遥感值操作
-        上右值； 0-127
-        左下值； 255-128
-    */
-	short left_up_car=0,right_up_car=0;
-    /* 前进后退 */
-	//printf("L_UD= %d   ", ps2_buf[1]);
-    if (abs(128-ps2_buf[1]) > 20) /* 左边上下 */
-    {
-        if ((ps2_buf[1] < 128) ) /* 上 */
-            left_up_car = (128-ps2_buf[1]) * 2;
-        else /* 下 */
-            left_up_car = (128-ps2_buf[1]) * 2;
-    }
-	//printf("R_UD= %d   \n", ps2_buf[3]);
-    if (abs(128-ps2_buf[3]) > 20) /* 右边上下 */
-    {
-        if (ps2_buf[3] < 128) /* 上 */
-            right_up_car = (128-ps2_buf[3]) * 2;
-        else /* 下 */
-            right_up_car = (128-ps2_buf[3]) * 2;
-    }
-	
-	Vel.TG_IX = left_up_car+right_up_car;
+#if ENABLE_PS2_CHASSIS_CONTROL
+    Vel.TG_IX = ps2_axis_to_speed(ps2_buf[1], PS2_MOVE_SCALE, PS2_MAX_MOVE_SPEED);
+    Vel.TG_IY = ps2_axis_to_speed(ps2_buf[0], PS2_MOVE_SCALE, PS2_MAX_MOVE_SPEED);
+    Vel.TG_IW = ps2_axis_to_speed(ps2_buf[2], PS2_TURN_SCALE, PS2_MAX_TURN_SPEED);
+#endif
 
-    /* 左边左右,平移 */
-    //printf("L_RL= %d   ", ps2_buf[0]);
-	if(abs(128-ps2_buf[0]) > 20)
+#if PS2_DEBUG_PRINT
+    ps2_debug_count++;
+    if (ps2_debug_count >= 50)
     {
-		if (ps2_buf[0] < 128) /* 左 */
-			Vel.TG_IY = (128-ps2_buf[0]) * 2;
-		else /* 左 */
-			Vel.TG_IY = (128-ps2_buf[0]) * 2;
-	}
-	else
-	{
-		Vel.TG_IY = 0;
-	}
-    /* 右边左右，转弯 */
-    //printf("R_RL= %d\r\n", ps2_buf[2]);
-	if(abs(128-ps2_buf[2]) > 20)
-    {
-		if (ps2_buf[2] < 128) /* 左 */
-			Vel.TG_IW = (128-ps2_buf[2]) * 10;
-		else /* 左 */
-			Vel.TG_IW = (128-ps2_buf[2]) * 10;
-	}	
-	else
-	{
-		Vel.TG_IW=0;
-	}
+        ps2_debug_count = 0;
+        printf("ps2 action=%s lx=%d ly=%d rx=%d ry=%d vel=%d,%d,%d\r\n",
+               ps2_capture_label(),
+               ps2_buf[0], ps2_buf[1], ps2_buf[2], ps2_buf[3],
+               Vel.TG_IX, Vel.TG_IY, Vel.TG_IW);
+    }
+#endif
 }

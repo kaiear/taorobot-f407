@@ -1,22 +1,22 @@
 #include "main.h"
 
 
-static uint8_t uart2_rx_con=0;       //½ÓÊÕ¼ÆÊýÆ÷
-static uint8_t uart2_rx_checksum;    //Ö¡Í·²¿·ÖÐ£ÑéºÍ
-static uint8_t uart2_rx_buf[40];     //½ÓÊÕ»º³å£¬Êý¾ÝÄÚÈÝÐ¡ÓÚµÈÓÚ32Byte
-static uint8_t uart2_tx_buf[40];     //·¢ËÍ»º³å
+static uint8_t uart2_rx_con=0;       //ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½ï¿½
+static uint8_t uart2_rx_checksum;    //Ö¡Í·ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½
+static uint8_t uart2_rx_buf[40];     //ï¿½ï¿½ï¿½Õ»ï¿½ï¿½å£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½Úµï¿½ï¿½ï¿½32Byte
+static uint8_t uart2_tx_buf[40];     //ï¿½ï¿½ï¿½Í»ï¿½ï¿½ï¿½
 
 uint8_t ros_servo_data=0;
 
 
 
 /**
-  * @¼ò  Êö  UART   ´®¿Ú³õÊ¼»¯
-  * @²Î  Êý  baud£º ²¨ÌØÂÊÉèÖÃ
-  * @·µ»ØÖµ	 ÎÞ
+  * @ï¿½ï¿½  ï¿½ï¿½  UART   ï¿½ï¿½ï¿½Ú³ï¿½Ê¼ï¿½ï¿½
+  * @ï¿½ï¿½  ï¿½ï¿½  baudï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+  * @ï¿½ï¿½ï¿½ï¿½Öµ	 ï¿½ï¿½
   */
 	
-//ÓÃ»§½Ó¿Ú£¬Ò²¿ÉÖ±½Ó½ÓÊ÷Ý®ÅÉµÄGPIO
+//ï¿½Ã»ï¿½ï¿½Ó¿Ú£ï¿½Ò²ï¿½ï¿½Ö±ï¿½Ó½ï¿½ï¿½ï¿½Ý®ï¿½Éµï¿½GPIO
 void UART2_Init(uint32_t baud)
 {
 
@@ -25,15 +25,15 @@ void UART2_Init(uint32_t baud)
 	NVIC_InitTypeDef  NVIC_InitStructure;
 
 
-	/* ´®¿ÚUSARTÅäÖÃ */
+	/* ï¿½ï¿½ï¿½ï¿½USARTï¿½ï¿½ï¿½ï¿½ */
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD,ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2,ENABLE);
 	
-	//USART¶ÔÓ¦Òý½Å¸´ÓÃÓ³Éä
+	//USARTï¿½ï¿½Ó¦ï¿½ï¿½ï¿½Å¸ï¿½ï¿½ï¿½Ó³ï¿½ï¿½
 	GPIO_PinAFConfig(GPIOD,GPIO_PinSource5,GPIO_AF_USART2);
 	GPIO_PinAFConfig(GPIOD,GPIO_PinSource6,GPIO_AF_USART2); 
 
-	//USART ¶Ë¿ÚÅäÖÃ
+	//USART ï¿½Ë¿ï¿½ï¿½ï¿½ï¿½ï¿½
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_6;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	
@@ -41,8 +41,8 @@ void UART2_Init(uint32_t baud)
 //	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP; 
 	GPIO_Init(GPIOD,&GPIO_InitStructure); 
 
-	//USART²ÎÊýÅäÖÃ
-	USART_InitStructure.USART_BaudRate = baud;    //²¨ÌØÂÊ
+	//USARTï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	USART_InitStructure.USART_BaudRate = baud;    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
@@ -50,37 +50,37 @@ void UART2_Init(uint32_t baud)
 	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
 	USART_Init(USART2, &USART_InitStructure);
 
-	//USARTÊ¹ÄÜ
+	//USARTÊ¹ï¿½ï¿½
 	USART_Cmd(USART2, ENABLE); 
 	
-	//¿ªÆô´®¿Ú½ÓÊÕÖÐ¶Ï
-	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);//¿ªÆôÏà¹ØÖÐ¶Ï
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½
+	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½
 
-    //USART2 NVIC ÅäÖÃ
-  NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;//´®¿Ú1ÖÐ¶ÏÍ¨µÀ
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=1;//ÇÀÕ¼ÓÅÏÈ¼¶
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority =1;		//×ÓÓÅÏÈ¼¶
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;			//IRQÍ¨µÀÊ¹ÄÜ
-	NVIC_Init(&NVIC_InitStructure);	//¸ù¾ÝÖ¸¶¨µÄ²ÎÊý³õÊ¼»¯VIC¼Ä´æÆ÷	
+    //USART2 NVIC ï¿½ï¿½ï¿½ï¿½
+  NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;//ï¿½ï¿½ï¿½ï¿½1ï¿½Ð¶ï¿½Í¨ï¿½ï¿½
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=1;//ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½È¼ï¿½
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority =1;		//ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;			//IRQÍ¨ï¿½ï¿½Ê¹ï¿½ï¿½
+	NVIC_Init(&NVIC_InitStructure);	//ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Ä²ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½VICï¿½Ä´ï¿½ï¿½ï¿½	
 	
 }
 
 /**
-  * @¼ò  Êö  UART ´®¿ÚÖÐ¶Ï·þÎñº¯Êý
-  * @²Î  Êý  ÎÞ 
-  * @·µ»ØÖµ  ÎÞ
+  * @ï¿½ï¿½  ï¿½ï¿½  UART ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ï·ï¿½ï¿½ï¿½ï¿½ï¿½
+  * @ï¿½ï¿½  ï¿½ï¿½  ï¿½ï¿½ 
+  * @ï¿½ï¿½ï¿½ï¿½Öµ  ï¿½ï¿½
   */
 void USART2_IRQHandler(void)
 {
 	uint8_t Res;
 	
-	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)  //½ÓÊÕÖÐ¶Ï
+	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)  //ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½
 	{
 		Res =USART_ReceiveData(USART2);	
 		
-		if(uart2_rx_con < 3)    //==½ÓÊÕÖ¡Í· + ³¤¶È
+		if(uart2_rx_con < 3)    //==ï¿½ï¿½ï¿½ï¿½Ö¡Í· + ï¿½ï¿½ï¿½ï¿½
 		{
-			if(uart2_rx_con == 0)  //½ÓÊÕÖ¡Í·1 0xAA
+			if(uart2_rx_con == 0)  //ï¿½ï¿½ï¿½ï¿½Ö¡Í·1 0xAA
 			{
 				if(Res == 0xAA)
 				{
@@ -91,7 +91,7 @@ void USART2_IRQHandler(void)
 				{
 					
 				}
-			}else if(uart2_rx_con == 1) //½ÓÊÕÖ¡Í·2 0x55
+			}else if(uart2_rx_con == 1) //ï¿½ï¿½ï¿½ï¿½Ö¡Í·2 0x55
 			{
 				if(Res == 0x55)
 				{
@@ -103,14 +103,14 @@ void USART2_IRQHandler(void)
 					uart2_rx_con = 0;						
 				}				
 			}
-			else  //½ÓÊÕÊý¾Ý³¤¶È
+			else  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½ï¿½ï¿½
 			{
 				uart2_rx_buf[2] = Res;
 				uart2_rx_con = 3;
-				uart2_rx_checksum = (0xAA+0x55) + Res;	//¼ÆËãÐ£ÑéºÍ
+				uart2_rx_checksum = (0xAA+0x55) + Res;	//ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½
 			}
 		}
-		else    //==½ÓÊÕÊý¾Ý
+		else    //==ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		{
 			if(uart2_rx_con < (uart2_rx_buf[2]-1) )
 			{
@@ -118,15 +118,15 @@ void USART2_IRQHandler(void)
 				uart2_rx_con++;
 				uart2_rx_checksum = uart2_rx_checksum + Res;					
 			}
-			else    //ÅÐ¶Ï×îºó1Î»
+			else    //ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½1Î»
 			{
-				//½ÓÊÕÍê³É£¬»Ö¸´³õÊ¼×´Ì¬
+				//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Ê¼×´Ì¬
 				uart2_rx_con = 0;	
-				printf("%s \r\n",uart2_rx_buf);
-				//Êý¾ÝÐ£Ñé
-				if( Res == uart2_rx_checksum )  //Ð£ÑéÕýÈ·
+				//ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½
+				if( Res == uart2_rx_checksum )  //Ð£ï¿½ï¿½ï¿½ï¿½È·
 				{	
-					//ËÙ¶È¿ØÖÆÖ¡
+					printf("uart2 frame id=0x%02X len=%d\r\n", uart2_rx_buf[3], uart2_rx_buf[2]);
+					//ï¿½Ù¶È¿ï¿½ï¿½ï¿½Ö¡
 					if(uart2_rx_buf[3] == ID_ROS2STM_VEL)
 					{
 						Vel.TG_IX = (int16_t)((uart2_rx_buf[4]<<8) | uart2_rx_buf[5]);
@@ -135,13 +135,13 @@ void USART2_IRQHandler(void)
 					}
 					else
 					{
-						//IMUÍÓÂÝÒÇÐ£×¼
+						//IMUï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£×¼
 						if(uart2_rx_buf[3] == ID_ROS2STM_IMU)
 						{
 							imu_calibrate_flag = uart2_rx_buf[4];
 						}	
 
-						//»úÐµ±Û¿ØÖÆÖ¡
+						//ï¿½ï¿½Ðµï¿½Û¿ï¿½ï¿½ï¿½Ö¡
 						else if(uart2_rx_buf[3] == ID_ROS2STM_HAND)
 						{
 							ros_servo_data=1;
@@ -153,7 +153,7 @@ void USART2_IRQHandler(void)
 						}
 												
 
-						//»úÐµ±Û¿ØÖÆÖ¡
+						//ï¿½ï¿½Ðµï¿½Û¿ï¿½ï¿½ï¿½Ö¡
 						else if(uart2_rx_buf[3] == ID_ROS2STM_ARM)
 						{
 
@@ -182,7 +182,7 @@ void USART2_IRQHandler(void)
 							
 								
 						}
-						//¼üÅÌ¿ØÖÆ»úÐµ±Û¿ØÖÆÖ¡
+						//ï¿½ï¿½ï¿½Ì¿ï¿½ï¿½Æ»ï¿½Ðµï¿½Û¿ï¿½ï¿½ï¿½Ö¡
 						else if(uart2_rx_buf[3] == ID_ROS2STM_KEY)
 						{
 
@@ -220,7 +220,7 @@ void USART2_IRQHandler(void)
 								ros_servo.time[5] = 50;
 							}								
 						}
-						//»úÐµ±ÛÄæÔË¶¯Ñ§¿ØÖÆÖ¡
+						//ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½Ñ§ï¿½ï¿½ï¿½ï¿½Ö¡
 						else if(uart2_rx_buf[3] == ID_ROS2STM_IK)
 						{
 
@@ -257,7 +257,7 @@ void USART2_IRQHandler(void)
 							on_time = (int16_t)((uart2_rx_buf[6]<<8) | uart2_rx_buf[7]);
 							off_time = (int16_t)((uart2_rx_buf[8]<<8) | uart2_rx_buf[9]);
 						}	
-						//»úÐµ±ÛºÍµ×ÅÌ¸´Î»
+						//ï¿½ï¿½Ðµï¿½ÛºÍµï¿½ï¿½Ì¸ï¿½Î»
 						else if(uart2_rx_buf[3] == ID_ROS2STM_RESET)
 						{
 							if(uart2_rx_buf[4] == 100)
@@ -290,20 +290,20 @@ void USART2_IRQHandler(void)
 
 
 /**
-  * @¼ò  Êö  UART ·¢ËÍÊý¾Ý£¨X-ProtocolÐ­Òé£©
-  * @²Î  Êý  *pbuf£º·¢ËÍÊý¾ÝÖ¸Õë
-  *          len£º·¢ËÍÊý¾Ý³¤¶È¸öÊý£¬¡Ü27 (32-5)
-  *          num£ºÖ¡ºÅ£¬Ö¡±àÂë
-  * @·µ»ØÖµ	 ÎÞ
+  * @ï¿½ï¿½  ï¿½ï¿½  UART ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½X-ProtocolÐ­ï¿½é£©
+  * @ï¿½ï¿½  ï¿½ï¿½  *pbufï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
+  *          lenï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½ï¿½È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½27 (32-5)
+  *          numï¿½ï¿½Ö¡ï¿½Å£ï¿½Ö¡ï¿½ï¿½ï¿½ï¿½
+  * @ï¿½ï¿½ï¿½ï¿½Öµ	 ï¿½ï¿½
   */
 void UART2_SendPacket(uint8_t *pbuf, uint8_t len, uint8_t num)
 {
 	uint8_t i,cnt;	
-    uint8_t tx_checksum = 0;//·¢ËÍÐ£ÑéºÍ
+    uint8_t tx_checksum = 0;//ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½
 	
 	if(len <= 39)
 	{
-		/******»ñÈ¡Êý¾Ý******/
+		/******ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½******/
 		uart2_tx_buf[0] = 0xAA;    //Ö¡Í·
 		uart2_tx_buf[1] = 0x55;    //
 		for(i=0; i<len; i++)
@@ -311,7 +311,7 @@ void UART2_SendPacket(uint8_t *pbuf, uint8_t len, uint8_t num)
 			uart2_tx_buf[2+i] = *(pbuf+i);
 		}
 		
-		/******¼ÆËãÐ£ÑéºÍ******/	
+		/******ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½******/	
 		cnt = 2+len;
 		for(i=0; i<cnt; i++)
 		{
@@ -320,10 +320,10 @@ void UART2_SendPacket(uint8_t *pbuf, uint8_t len, uint8_t num)
 		uart2_tx_buf[i] = tx_checksum;
 		uart2_tx_buf[35] = 0x7D;    //Ö¡?
 		
-		/******·¢ËÍÊý¾Ý******/	
+		/******ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½******/	
 		cnt = 4+len;
 		
-		//²éÑ¯´«Êä·½Ê½
+		//ï¿½ï¿½Ñ¯ï¿½ï¿½ï¿½ä·½Ê½
 		for(i=0; i<cnt; i++)
 		{
 			USART_SendData(USART2, uart2_tx_buf[i]);
@@ -331,4 +331,5 @@ void UART2_SendPacket(uint8_t *pbuf, uint8_t len, uint8_t num)
 		}
 	}
 }
+
 

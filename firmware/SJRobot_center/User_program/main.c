@@ -10,7 +10,7 @@ __ALIGN_BEGIN USB_OTG_CORE_HANDLE USB_OTG_Core_dev __ALIGN_END;
 __ALIGN_BEGIN USBH_HOST USB_Host __ALIGN_END;
 extern HID_Machine_TypeDef HID_Machine;
 
-#define ENABLE_MOTOR_FORCE_TEST 1
+#define ENABLE_MOTOR_FORCE_TEST 0
 #define MOTOR_FORCE_TEST_SPEED 600
 #define STARTUP_STABILIZE_DELAY_MS 1000
 #define ENABLE_STARTUP_GYRO_AVG 0
@@ -47,6 +47,7 @@ int main(void)
 
 	UART1_Init(115200);
 	Delay_ms(5);
+	printf("uart1 debug online\r\n");
 
 	UART2_Init(115200);
 	Delay_ms(5);
@@ -108,6 +109,7 @@ int main(void)
 	USBH_Init(&USB_OTG_Core_dev,
 			  USB_OTG_FS_CORE_ID,
 			  &USB_Host, &HID_cb, &USR_Callbacks);
+	printf("boot after usbh init\r\n");
 	
 	Delay_ms(STARTUP_STABILIZE_DELAY_MS);
 #if ENABLE_STARTUP_GYRO_AVG
@@ -133,9 +135,19 @@ int main(void)
 #endif
 	beep_on_times(3, 100);
  Task_Manage_List_Init();
+	printf("main loop enter\r\n");
     while (1)
     {
+        static uint16_t alive_count = 0;
+
         Execute_Task_List_RUN();
+
+		alive_count++;
+		if (alive_count >= 100)
+		{
+			alive_count = 0;
+			printf("alive tick\r\n");
+		}
 
 #if ENABLE_MOTOR_FORCE_TEST
         MOTOR_A_SetSpeed(0);
