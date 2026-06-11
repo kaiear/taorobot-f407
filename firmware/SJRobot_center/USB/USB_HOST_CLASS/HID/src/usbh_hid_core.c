@@ -1,4 +1,4 @@
-/**
+  /**
  ******************************************************************************
  * @file    usbh_hid_core.c
  * @author  MCD Application Team
@@ -108,7 +108,7 @@ __ALIGN_BEGIN USB_Setup_TypeDef HID_Setup __ALIGN_END;
 __ALIGN_BEGIN USBH_HIDDesc_TypeDef HID_Desc __ALIGN_END;
 
 __IO uint8_t start_toggle = 0;
-#define HID_URB_DEBUG 1
+#define HID_URB_DEBUG 0
 /**
  * @}
  */

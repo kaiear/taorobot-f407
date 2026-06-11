@@ -3,14 +3,16 @@
 
 #define PSX_BUTTON_NUM 16 // 手柄按键数目
 #define ENABLE_PS2_CHASSIS_CONTROL 1
-#define PS2_DEBUG_PRINT 1
+#define PS2_DEBUG_PRINT 0
 #define PS2_DEADZONE 20
-#define PS2_MOVE_SCALE 2
-#define PS2_TURN_SCALE 6
-#define PS2_MAX_MOVE_SPEED 300
-#define PS2_MAX_TURN_SPEED 600
 #define PS2_TIMEOUT_COUNT 100
-#define PS2_CAPTURE_THRESHOLD 60
+#define PS2_SPEED_GEAR_NUM 3
+#define PS2_DEFAULT_SPEED_GEAR 1
+#define PS2_BUTTON_SELECT 0X0100
+#define PS2_BUTTON_START 0X0800
+#define PS2_PROTECT_ON 1
+#define PS2_PROTECT_OFF 0
+#define PS2_BUTTON_IS_PRESSED(button) (!(ps2_cmd & (button)))
 
 u8 uart_receive_buf[128];
 
@@ -48,6 +50,30 @@ static u16 ps2_cmd = 0;
 static u16 ps2_cmd_last = 0;
 static u16 ps2_status_flag = 0xffff;
 
+typedef struct
+{
+    short move_scale;
+    short move_limit;
+    short turn_scale;
+    short turn_limit;
+} ps2_speed_gear_t;
+
+static const ps2_speed_gear_t ps2_speed_gears[PS2_SPEED_GEAR_NUM] = {
+    {2, 300, 3, 300},
+    {6, 900, 6, 700},
+    {10, 1500, 9, 1100},
+};
+
+static u8 ps2_speed_gear = PS2_DEFAULT_SPEED_GEAR;
+static u8 ps2_protect_mode = PS2_PROTECT_ON;
+
+static void ps2_stop_chassis(void)
+{
+    Vel.TG_IX = 0;
+    Vel.TG_IY = 0;
+    Vel.TG_IW = 0;
+}
+
 static short ps2_limit_speed(short value, short limit)
 {
     if (value > limit)
@@ -68,40 +94,30 @@ static short ps2_axis_to_speed(u8 raw_value, short scale, short limit)
     return ps2_limit_speed(value, limit);
 }
 
-static const char *ps2_capture_label(void)
+static void ps2_next_speed_gear(void)
 {
-    short lx = 128 - ps2_buf[0];
-    short ly = 128 - ps2_buf[1];
-    short rx = 128 - ps2_buf[2];
-
-    if (ly > PS2_CAPTURE_THRESHOLD)
-        return "LEFT_STICK_FORWARD";
-    if (ly < -PS2_CAPTURE_THRESHOLD)
-        return "LEFT_STICK_BACKWARD";
-    if (lx > PS2_CAPTURE_THRESHOLD)
-        return "LEFT_STICK_LEFT";
-    if (lx < -PS2_CAPTURE_THRESHOLD)
-        return "LEFT_STICK_RIGHT";
-    if (rx > PS2_CAPTURE_THRESHOLD)
-        return "RIGHT_STICK_LEFT";
-    if (rx < -PS2_CAPTURE_THRESHOLD)
-        return "RIGHT_STICK_RIGHT";
-
-    return "CENTER";
+    ps2_speed_gear++;
+    if (ps2_speed_gear >= PS2_SPEED_GEAR_NUM)
+        ps2_speed_gear = 0;
 }
 
-static void ps2_stop_chassis(void)
+static void ps2_toggle_protect_mode(void)
 {
-    Vel.TG_IX = 0;
-    Vel.TG_IY = 0;
-    Vel.TG_IW = 0;
+    if (ps2_protect_mode)
+        ps2_protect_mode = PS2_PROTECT_OFF;
+    else
+        ps2_protect_mode = PS2_PROTECT_ON;
+
+    ps2_stop_chassis();
 }
 
 void app_ps2(void)
 {
     uint16_t pos;
     static u16 ps2_lost_count = 0;
+#if PS2_DEBUG_PRINT
     static u16 ps2_debug_count = 0;
+#endif
 
     // 或者ps2没有读取数据，直接返回
     if (!ps2_do_ok)
@@ -201,36 +217,50 @@ void app_ps2(void)
     {
         for (u8 i = 0; i < 16; i++)
         {
-            if (!(ps2_cmd & (1 << i))) /* 当前手柄按下 */
+            if (PS2_BUTTON_IS_PRESSED(1 << i)) /* 当前手柄按下 */
             {
                 if ((ps2_status_flag & (1 << i))) /* 上一次手柄未按下 */
                 {
-                    memset(uart_receive_buf, 0, sizeof(uart_receive_buf));
-                    memcpy((char *)uart_receive_buf, (char *)pre_cmd_set_grn[i], strlen(pre_cmd_set_grn[i]));
+                    if ((1 << i) == PS2_BUTTON_SELECT)
+                    {
+                        ps2_next_speed_gear();
+                    }
+                    else if ((1 << i) == PS2_BUTTON_START)
+                    {
+                        ps2_toggle_protect_mode();
+                    }
+                    else if (!ps2_protect_mode)
+                    {
+                        memset(uart_receive_buf, 0, sizeof(uart_receive_buf));
+                        memcpy((char *)uart_receive_buf, (char *)pre_cmd_set_grn[i], strlen(pre_cmd_set_grn[i]));
 
-                    pos = str_contain_str(uart_receive_buf, (u8 *)"^");
-                    if (pos)
-                        uart_receive_buf[pos - 1] = '\0';
+                        pos = str_contain_str(uart_receive_buf, (u8 *)"^");
+                        if (pos)
+                            uart_receive_buf[pos - 1] = '\0';
 
-                    strcpy((char *)cmd_return, (char *)uart_receive_buf + 6);
-                    /* 判断指令格式 */
-                    parse_action(cmd_return);
+                        strcpy((char *)cmd_return, (char *)uart_receive_buf + 6);
+                        /* 判断指令格式 */
+                        parse_action(cmd_return);
+                    }
                 }
             }
             else
             {
                 if (!(ps2_status_flag & (1 << i)))
                 {
-                    memset(uart_receive_buf, 0, sizeof(uart_receive_buf));
-                    /* 执行一次释放事件 */
-                    memcpy((char *)uart_receive_buf, (char *)pre_cmd_set_grn[i], strlen(pre_cmd_set_grn[i]));
-
-                    pos = str_contain_str(uart_receive_buf, (u8 *)"^");
-                    if (pos)
+                    if (!ps2_protect_mode)
                     {
-                        strcpy((char *)cmd_return, (char *)uart_receive_buf + pos);
-                        /* 判断指令格式 */
-                        parse_action(cmd_return);
+                        memset(uart_receive_buf, 0, sizeof(uart_receive_buf));
+                        /* 执行一次释放事件 */
+                        memcpy((char *)uart_receive_buf, (char *)pre_cmd_set_grn[i], strlen(pre_cmd_set_grn[i]));
+
+                        pos = str_contain_str(uart_receive_buf, (u8 *)"^");
+                        if (pos)
+                        {
+                            strcpy((char *)cmd_return, (char *)uart_receive_buf + pos);
+                            /* 判断指令格式 */
+                            parse_action(cmd_return);
+                        }
                     }
                 }
             }
@@ -239,9 +269,16 @@ void app_ps2(void)
     }
 
 #if ENABLE_PS2_CHASSIS_CONTROL
-    Vel.TG_IX = ps2_axis_to_speed(ps2_buf[1], PS2_MOVE_SCALE, PS2_MAX_MOVE_SPEED);
-    Vel.TG_IY = ps2_axis_to_speed(ps2_buf[0], PS2_MOVE_SCALE, PS2_MAX_MOVE_SPEED);
-    Vel.TG_IW = ps2_axis_to_speed(ps2_buf[2], PS2_TURN_SCALE, PS2_MAX_TURN_SPEED);
+    if (ps2_protect_mode)
+    {
+        ps2_stop_chassis();
+    }
+    else
+    {
+        Vel.TG_IX = ps2_axis_to_speed(ps2_buf[1], ps2_speed_gears[ps2_speed_gear].move_scale, ps2_speed_gears[ps2_speed_gear].move_limit);
+        Vel.TG_IY = ps2_axis_to_speed(ps2_buf[0], ps2_speed_gears[ps2_speed_gear].move_scale, ps2_speed_gears[ps2_speed_gear].move_limit);
+        Vel.TG_IW = ps2_axis_to_speed(ps2_buf[2], ps2_speed_gears[ps2_speed_gear].turn_scale, ps2_speed_gears[ps2_speed_gear].turn_limit);
+    }
 #endif
 
 #if PS2_DEBUG_PRINT
@@ -249,8 +286,9 @@ void app_ps2(void)
     if (ps2_debug_count >= 50)
     {
         ps2_debug_count = 0;
-        printf("ps2 action=%s lx=%d ly=%d rx=%d ry=%d vel=%d,%d,%d\r\n",
-               ps2_capture_label(),
+        printf("ps2 protect=%d gear=%d lx=%d ly=%d rx=%d ry=%d vel=%d,%d,%d\r\n",
+               ps2_protect_mode,
+               ps2_speed_gear,
                ps2_buf[0], ps2_buf[1], ps2_buf[2], ps2_buf[3],
                Vel.TG_IX, Vel.TG_IY, Vel.TG_IW);
     }

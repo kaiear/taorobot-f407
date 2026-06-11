@@ -2,7 +2,7 @@
 
 uint8_t ps2_buf[12];
 uint8_t ps2_do_ok = 0;
-#define GAMEPAD_RAW_DEBUG 1
+#define GAMEPAD_RAW_DEBUG 0
 static void GAMEPAD_Init(void);
 static void GAMEPAD_Decode(u8 *data);
 

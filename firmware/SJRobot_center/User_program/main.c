@@ -15,6 +15,7 @@ extern HID_Machine_TypeDef HID_Machine;
 #define STARTUP_STABILIZE_DELAY_MS 1000
 #define ENABLE_STARTUP_GYRO_AVG 0
 #define STARTUP_GYRO_SAMPLE_COUNT 20
+#define MAIN_ALIVE_DEBUG 0
 
 int main(void)
 	
@@ -138,16 +139,20 @@ int main(void)
 	printf("main loop enter\r\n");
     while (1)
     {
+#if MAIN_ALIVE_DEBUG
         static uint16_t alive_count = 0;
+#endif
 
         Execute_Task_List_RUN();
 
+#if MAIN_ALIVE_DEBUG
 		alive_count++;
 		if (alive_count >= 100)
 		{
 			alive_count = 0;
 			printf("alive tick\r\n");
 		}
+#endif
 
 #if ENABLE_MOTOR_FORCE_TEST
         MOTOR_A_SetSpeed(0);
