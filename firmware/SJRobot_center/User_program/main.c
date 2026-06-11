@@ -10,15 +10,17 @@ __ALIGN_BEGIN USB_OTG_CORE_HANDLE USB_OTG_Core_dev __ALIGN_END;
 __ALIGN_BEGIN USBH_HOST USB_Host __ALIGN_END;
 extern HID_Machine_TypeDef HID_Machine;
 
-#define ENABLE_MOTOR_FORCE_TEST 0
-#define MOTOR_FORCE_TEST_SPEED  500
+#define ENABLE_MOTOR_FORCE_TEST 1
+#define MOTOR_FORCE_TEST_SPEED 600
+#define STARTUP_STABILIZE_DELAY_MS 1000
+#define ENABLE_STARTUP_GYRO_AVG 0
+#define STARTUP_GYRO_SAMPLE_COUNT 20
 
 int main(void)
 	
 {
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
 
-	int16_t gyro_data[3];
 	Delay_ms(5);
 	SysTickConfig(); 
 	Delay_ms(5);
@@ -82,15 +84,20 @@ int main(void)
 	// Delay_ms(5);
 	// BEEP_Off();
 	// Delay_ms(5);
-	float data[300],sumx,sumy,sumz;
+#if ENABLE_STARTUP_GYRO_AVG
+	float data[STARTUP_GYRO_SAMPLE_COUNT];
+	float sumx = 0;
+	float sumy = 0;
+	float sumz = 0;
+#endif
 	
 	for (int i = 0; i < 10; i++)
 	{
 		
 		MPU_Get_Gyroscope(imu_gyro_data);
-		imu_gyro_offset[0] += gyro_data[0];
-		imu_gyro_offset[1] += gyro_data[1];
-		imu_gyro_offset[2] += gyro_data[2];
+		imu_gyro_offset[0] += imu_gyro_data[0];
+		imu_gyro_offset[1] += imu_gyro_data[1];
+		imu_gyro_offset[2] += imu_gyro_data[2];
 	}
 
 	
@@ -102,26 +109,28 @@ int main(void)
 			  USB_OTG_FS_CORE_ID,
 			  &USB_Host, &HID_cb, &USR_Callbacks);
 	
-	Delay_ms(20000); 
-	for(int z=0; z<=199; z++)
+	Delay_ms(STARTUP_STABILIZE_DELAY_MS);
+#if ENABLE_STARTUP_GYRO_AVG
+	for(int z=0; z<STARTUP_GYRO_SAMPLE_COUNT; z++)
 	{
 		MPU_Get_Gyroscope(imu_gyro_data);
 		data[z]=imu_gyro_data[0];
 		sumx = sumx + data[z];
 	}
-	for(int z=0; z<=199; z++)
+	for(int z=0; z<STARTUP_GYRO_SAMPLE_COUNT; z++)
 	{
 		MPU_Get_Gyroscope(imu_gyro_data);
 		data[z]=imu_gyro_data[1];
 		sumy = sumy + data[z];
 	}
-	for(int z=0; z<=199; z++)
+	for(int z=0; z<STARTUP_GYRO_SAMPLE_COUNT; z++)
 	{
 		MPU_Get_Gyroscope(imu_gyro_data);
 		data[z]=imu_gyro_data[2];
 		sumz = sumz + data[z];
 	}
-//	printf("sumx=%f, sumy=%f, sumz=%f",sumx/200.0,sumy/200.0,sumz/200.0);
+//	printf("sumx=%f, sumy=%f, sumz=%f",sumx/STARTUP_GYRO_SAMPLE_COUNT,sumy/STARTUP_GYRO_SAMPLE_COUNT,sumz/STARTUP_GYRO_SAMPLE_COUNT);
+#endif
 	beep_on_times(3, 100);
  Task_Manage_List_Init();
     while (1)
@@ -129,9 +138,9 @@ int main(void)
         Execute_Task_List_RUN();
 
 #if ENABLE_MOTOR_FORCE_TEST
-        MOTOR_A_SetSpeed(MOTOR_FORCE_TEST_SPEED);
-        MOTOR_B_SetSpeed(MOTOR_FORCE_TEST_SPEED);
-        MOTOR_C_SetSpeed(MOTOR_FORCE_TEST_SPEED);
+        MOTOR_A_SetSpeed(0);
+        MOTOR_B_SetSpeed(0);
+        MOTOR_C_SetSpeed(0);
         MOTOR_D_SetSpeed(MOTOR_FORCE_TEST_SPEED);
 #endif
         
