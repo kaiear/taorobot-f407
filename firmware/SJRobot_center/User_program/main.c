@@ -154,6 +154,8 @@ int main(void)
 		}
 #endif
 
+        servo_bus_test_send_once();
+
 #if ENABLE_MOTOR_FORCE_TEST
         MOTOR_A_SetSpeed(0);
         MOTOR_B_SetSpeed(0);

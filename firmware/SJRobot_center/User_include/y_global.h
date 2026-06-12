@@ -10,8 +10,15 @@
 #define CMD_RETURN_SIZE 1024
 extern u8 cmd_return[CMD_RETURN_SIZE];
 
+extern volatile uint8_t servo_test_enable;
+extern volatile uint8_t servo_test_id;
+extern volatile uint16_t servo_test_pos;
+extern volatile uint16_t servo_test_time;
+extern volatile uint8_t servo_test_send;
+
 uint16_t str_contain_str(unsigned char *str, unsigned char *str2);
 float abs_float(float value);
 void parse_action(u8 *uart_receive_buf);
 void duoji_set(int duoji0, int duoji1, int duoji2, int duoji3, int duoji4, int duoji5);
+void servo_bus_test_send_once(void);
 #endif

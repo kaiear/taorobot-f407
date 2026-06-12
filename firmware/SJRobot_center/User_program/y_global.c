@@ -2,6 +2,12 @@
 
 u8 cmd_return[CMD_RETURN_SIZE];
 
+volatile uint8_t servo_test_enable = 0;
+volatile uint8_t servo_test_id = 0;
+volatile uint16_t servo_test_pos = 1500;
+volatile uint16_t servo_test_time = 1000;
+volatile uint8_t servo_test_send = 0;
+
 void zx_uart_send_str(u8 *str)
 {
     uart3_send_str(str);
@@ -39,7 +45,7 @@ uint16_t str_contain_str(unsigned char *str, unsigned char *str2)
     return 0;
 }
 
-/* È¡¾ø¶ÔÖµº¯Êý */
+/* È¡ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ */
 float abs_float(float value)
 {
     if (value > 0)
@@ -49,10 +55,10 @@ float abs_float(float value)
     return (-value);
 }
 
-/* ¿ØÖÆ¶æ»úµÄ±äÁ¿ */
+/* ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ */
 int X0 = 0, X1 = 0, X2 = 0, X3 = 0, X4 = 0, X5 = 0;
 
-/* ¿ØÖÆ¶æ»úµÄº¯Êý */
+/* ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½ */
 void duoji_set(int duoji0, int duoji1, int duoji2, int duoji3, int duoji4, int duoji5)
 { 
     sprintf((char *)cmd_return, "{#000P%04dT%04d!#001P%04dT%04d!#002P%04dT%04d!#003P%04dT%04d!#004P%04dT%04d!#005P%04dT%04d!}", ros_servo.pwm[0], ros_servo.time[0],
@@ -65,7 +71,53 @@ void duoji_set(int duoji0, int duoji1, int duoji2, int duoji3, int duoji4, int d
     parse_action(cmd_return);
 }
 
-// ´¦Àí #000P1500T1000! ÀàËÆµÄ×Ö·û´®
+void servo_bus_test_send_once(void)
+{
+    uint8_t safe_id;
+    uint16_t safe_pos;
+    uint16_t safe_time;
+
+    if (!servo_test_enable || !servo_test_send)
+    {
+        return;
+    }
+
+    servo_test_send = 0;
+
+    safe_id = servo_test_id;
+    if (safe_id > 31)
+    {
+        safe_id = 31;
+        servo_test_id = safe_id;
+    }
+
+    safe_pos = servo_test_pos;
+    if (safe_pos < 600)
+    {
+        safe_pos = 600;
+    }
+    else if (safe_pos > 2400)
+    {
+        safe_pos = 2400;
+    }
+    servo_test_pos = safe_pos;
+
+    safe_time = servo_test_time;
+    if (safe_time < 500)
+    {
+        safe_time = 500;
+    }
+    else if (safe_time > 5000)
+    {
+        safe_time = 5000;
+    }
+    servo_test_time = safe_time;
+
+    sprintf((char *)cmd_return, "{#%03dP%04dT%04d!}", safe_id, safe_pos, safe_time);
+    zx_uart_send_str(cmd_return);
+}
+
+// ï¿½ï¿½ï¿½ï¿½ #000P1500T1000! ï¿½ï¿½ï¿½Æµï¿½ï¿½Ö·ï¿½ï¿½ï¿½
 void parse_action(u8 *uart_receive_buf)
 {
     u16 index, time, i = 0;
@@ -73,7 +125,7 @@ void parse_action(u8 *uart_receive_buf)
     float pwm;
     zx_uart_send_str(uart_receive_buf);
 
-    len = strlen((char *)uart_receive_buf); // »ñÈ¡´®¿Ú½ÓÊÕÊý¾ÝµÄ³¤¶È
+    len = strlen((char *)uart_receive_buf); // ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÝµÄ³ï¿½ï¿½ï¿½
     while (uart_receive_buf[i] && (len >= i))
     {
         if (uart_receive_buf[i] == '#')
