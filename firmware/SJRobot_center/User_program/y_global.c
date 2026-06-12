@@ -8,6 +8,46 @@ volatile uint16_t servo_test_pos = 1500;
 volatile uint16_t servo_test_time = 1000;
 volatile uint8_t servo_test_send = 0;
 
+static const uint16_t servo_pwm_min[6] = {510, 700, 600, 700, 850, 1200};
+static const uint16_t servo_pwm_max[6] = {2490, 2300, 2400, 2300, 2150, 1800};
+static const uint16_t servo_pwm_home[6] = {1500, 1500, 2150, 850, 1500, 1500};
+
+uint16_t servo_pwm_limit(uint8_t index, uint16_t pwm)
+{
+    if (index < 6)
+    {
+        if (pwm < servo_pwm_min[index])
+        {
+            return servo_pwm_min[index];
+        }
+        if (pwm > servo_pwm_max[index])
+        {
+            return servo_pwm_max[index];
+        }
+    }
+    else
+    {
+        if (pwm < 510)
+        {
+            return 510;
+        }
+        if (pwm > 2490)
+        {
+            return 2490;
+        }
+    }
+    return pwm;
+}
+
+uint16_t servo_home_pwm(uint8_t index)
+{
+    if (index < 6)
+    {
+        return servo_pwm_home[index];
+    }
+    return 1500;
+}
+
 void zx_uart_send_str(u8 *str)
 {
     uart3_send_str(str);
@@ -91,15 +131,7 @@ void servo_bus_test_send_once(void)
         servo_test_id = safe_id;
     }
 
-    safe_pos = servo_test_pos;
-    if (safe_pos < 600)
-    {
-        safe_pos = 600;
-    }
-    else if (safe_pos > 2400)
-    {
-        safe_pos = 2400;
-    }
+    safe_pos = servo_pwm_limit(safe_id, servo_test_pos);
     servo_test_pos = safe_pos;
 
     safe_time = servo_test_time;
@@ -158,6 +190,7 @@ void parse_action(u8 *uart_receive_buf)
                 i++;
             }
 
+            pwm = servo_pwm_limit(index, pwm);
             duoji_doing_set(index, pwm, time);
         }
         else

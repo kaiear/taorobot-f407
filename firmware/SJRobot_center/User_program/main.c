@@ -69,12 +69,12 @@ int main(void)
 	Delay_ms(5);
 	mpu_dmp_init();
 	Delay_ms(10);
-	ros_servo.pwm[0]=1500;
-	ros_servo.pwm[1]=1895;
-	ros_servo.pwm[2]=2380;
-	ros_servo.pwm[3]=950;
-	ros_servo.pwm[4]=1500;
-	ros_servo.pwm[5]=1160;
+	ros_servo.pwm[0]=servo_home_pwm(0);
+	ros_servo.pwm[1]=servo_home_pwm(1);
+	ros_servo.pwm[2]=servo_home_pwm(2);
+	ros_servo.pwm[3]=servo_home_pwm(3);
+	ros_servo.pwm[4]=servo_home_pwm(4);
+	ros_servo.pwm[5]=servo_home_pwm(5);
 	ros_servo.time[0] = 1500;
 	ros_servo.time[1] = 1500;
 	ros_servo.time[2] = 1500;

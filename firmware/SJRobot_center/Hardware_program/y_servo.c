@@ -4,23 +4,23 @@
 servo_t duoji_doing[DJ_NUM];
 
 /**
- * @¼ò  Êö  ¶æ»ú½Ó¿Ú³õÊ¼»¯
- * @²Î  Êý  ÎÞ
- * @·µ»ØÖµ  ÎÞ
+ * @ï¿½ï¿½  ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½Ó¿Ú³ï¿½Ê¼ï¿½ï¿½
+ * @ï¿½ï¿½  ï¿½ï¿½  ï¿½ï¿½
+ * @ï¿½ï¿½ï¿½ï¿½Öµ  ï¿½ï¿½
  */
 void SERVO_Init(void)
 {
     u8 i = 0;
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    RCC_AHB1PeriphClockCmd(SERVO0_GPIO_CLK | SERVO1_GPIO_CLK | SERVO2_GPIO_CLK | SERVO3_GPIO_CLK | SERVO4_GPIO_CLK | SERVO5_GPIO_CLK, ENABLE); /* Ê¹ÄÜ ¶æ»ú ¶Ë¿ÚÊ±ÖÓ */
+    RCC_AHB1PeriphClockCmd(SERVO0_GPIO_CLK | SERVO1_GPIO_CLK | SERVO2_GPIO_CLK | SERVO3_GPIO_CLK | SERVO4_GPIO_CLK | SERVO5_GPIO_CLK, ENABLE); /* Ê¹ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ë¿ï¿½Ê±ï¿½ï¿½ */
 
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;     /*¸´ÓÃ*/
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;    /*ÍÆÍìÊä³ö*/
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;     /*ï¿½ï¿½ï¿½ï¿½*/
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;    /*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
     GPIO_InitStructure.GPIO_Pin = SERVO0_PIN;         /*PF7*/
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;      /*ÉÏÀ­*/
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;      /*ï¿½ï¿½ï¿½ï¿½*/
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz; /**/
-    GPIO_Init(SERVO0_GPIO_PORT, &GPIO_InitStructure); /*³õÊ¼»¯IO*/
+    GPIO_Init(SERVO0_GPIO_PORT, &GPIO_InitStructure); /*ï¿½ï¿½Ê¼ï¿½ï¿½IO*/
 
     GPIO_InitStructure.GPIO_Pin = SERVO1_PIN;
     GPIO_Init(SERVO1_GPIO_PORT, &GPIO_InitStructure);
@@ -47,10 +47,10 @@ void SERVO_Init(void)
 }
 
 /***********************************************
-    ¹¦ÄÜ½éÉÜ£º	ÉèÖÃ¶æ»úÒý½ÅµçÆ½
-    º¯Êý²ÎÊý1£º	index ÒªÉèÖÃµÄ¶æ»úÒý½ÅË÷Òý
-    º¯Êý²ÎÊý2£º	level ÒªÉèÖÃµÄ¶æ»úÒý½ÅµçÆ½£¬1Îª¸ß£¬0ÎªµÍ
-    ·µ»ØÖµ£ºÎÞ
+    ï¿½ï¿½ï¿½Ü½ï¿½ï¿½Ü£ï¿½	ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½Æ½
+    ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½1ï¿½ï¿½	index Òªï¿½ï¿½ï¿½ÃµÄ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½2ï¿½ï¿½	level Òªï¿½ï¿½ï¿½ÃµÄ¶ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½Æ½ï¿½ï¿½1Îªï¿½ß£ï¿½0Îªï¿½ï¿½
+    ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½
  ***********************************************/
 void servo_pin_set(u8 index, BitAction level)
 {
@@ -80,17 +80,17 @@ void servo_pin_set(u8 index, BitAction level)
 }
 
 /***********************************************
-    ¹¦ÄÜ½éÉÜ£º	ÉèÖÃ¶æ»ú¿ØÖÆ²ÎÊýº¯Êý
-    º¯Êý²ÎÊý£º	index ¶æ»ú±àºÅ aim Ö´ÐÐÄ¿±ê time Ö´ÐÐÊ±¼ä(Èç¹ûaim Ö´ÐÐÄ¿±ê==0£¬ÊÓÎª¶æ»úÍ£Ö¹)
-    ·µ»ØÖµ£º		ÎÞ
+    ï¿½ï¿½ï¿½Ü½ï¿½ï¿½Ü£ï¿½	ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½Æ²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½	index ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ aim Ö´ï¿½ï¿½Ä¿ï¿½ï¿½ time Ö´ï¿½ï¿½Ê±ï¿½ï¿½(ï¿½ï¿½ï¿½aim Ö´ï¿½ï¿½Ä¿ï¿½ï¿½==0ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½Í£Ö¹)
+    ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½		ï¿½ï¿½
  ***********************************************/
 void duoji_doing_set(u8 index, int aim, int time)
 {
-    /* ÏÞÖÆÊäÈëÖµ´óÐ¡ */
+    /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½Ð¡ */
     if (index >= DJ_NUM)
         return;
 		
-		if(index == 3)/* 3ºÅPWM¶æ»úºÍ×ÜÏß¶æ»úÏà·´ */
+		if(index == 3)/* 3ï¿½ï¿½PWMï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¶ï¿½ï¿½ï¿½à·´ */
 		{
 			aim = 3000-aim;
 		}
@@ -115,7 +115,7 @@ void duoji_doing_set(u8 index, int aim, int time)
         aim = aim + 0.0077;
     }
 
-    if (time < 20) /* Ö´ÐÐÊ±¼äÌ«¶Ì£¬¶æ»úÖ±½ÓÒÔ×î¿ìËÙ¶ÈÔË¶¯ */
+    if (time < 20) /* Ö´ï¿½ï¿½Ê±ï¿½ï¿½Ì«ï¿½Ì£ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½ï¿½Ë¶ï¿½ */
     {
         duoji_doing[index].aim = aim;
         duoji_doing[index].cur = aim;
@@ -129,7 +129,7 @@ void duoji_doing_set(u8 index, int aim, int time)
     }
 }
 
-/* ÉèÖÃ¶æ»úÃ¿´ÎÔö¼ÓµÄÆ«ÒÆÁ¿ */
+/* ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½Æ«ï¿½ï¿½ï¿½ï¿½ */
 void servo_inc_offset(u8 index)
 {
     uint16_t aim_temp;
@@ -143,9 +143,9 @@ void servo_inc_offset(u8 index)
         {
             aim_temp = 2490;
         }
-        else if (aim_temp < 500)
+        else if (aim_temp < 510)
         {
-            aim_temp = 500;
+            aim_temp = 510;
         }
 
         if (abs_float((float)aim_temp - duoji_doing[index].cur) <= abs_float(duoji_doing[index].inc + duoji_doing[index].inc))
@@ -160,46 +160,46 @@ void servo_inc_offset(u8 index)
     }
 }
 
-// Í¨ÓÃ¶¨Ê±Æ÷3ÖÐ¶Ï³õÊ¼»¯
-// arr£º×Ô¶¯ÖØ×°Öµ¡£
-// psc£ºÊ±ÖÓÔ¤·ÖÆµÊý
-// ¶¨Ê±Æ÷Òç³öÊ±¼ä¼ÆËã·½·¨:Tout=((arr+1)*(psc+1))/Ft us.
-// Ft=¶¨Ê±Æ÷¹¤×÷ÆµÂÊ,µ¥Î»:Mhz
-// ÕâÀïÊ¹ÓÃµÄÊÇ¶¨Ê±Æ÷3!
+// Í¨ï¿½Ã¶ï¿½Ê±ï¿½ï¿½3ï¿½Ð¶Ï³ï¿½Ê¼ï¿½ï¿½
+// arrï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½×°Öµï¿½ï¿½
+// pscï¿½ï¿½Ê±ï¿½ï¿½Ô¤ï¿½ï¿½Æµï¿½ï¿½
+// ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ã·½ï¿½ï¿½:Tout=((arr+1)*(psc+1))/Ft us.
+// Ft=ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½,ï¿½ï¿½Î»:Mhz
+// ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ãµï¿½ï¿½Ç¶ï¿½Ê±ï¿½ï¿½3!
 void TIM14_Int_Init(u16 arr, u16 psc)
 {
     TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
 
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM14, ENABLE); /// Ê¹ÄÜTIM14Ê±ÖÓ
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM14, ENABLE); /// Ê¹ï¿½ï¿½TIM14Ê±ï¿½ï¿½
 
-    TIM_TimeBaseInitStructure.TIM_Period = arr;                     // ×Ô¶¯ÖØ×°ÔØÖµ
-    TIM_TimeBaseInitStructure.TIM_Prescaler = psc;                  // ¶¨Ê±Æ÷·ÖÆµ
-    TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up; // ÏòÉÏ¼ÆÊýÄ£Ê½
+    TIM_TimeBaseInitStructure.TIM_Period = arr;                     // ï¿½Ô¶ï¿½ï¿½ï¿½×°ï¿½ï¿½Öµ
+    TIM_TimeBaseInitStructure.TIM_Prescaler = psc;                  // ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Æµ
+    TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up; // ï¿½ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½Ä£Ê½
     TIM_TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
-    TIM_TimeBaseInit(TIM14, &TIM_TimeBaseInitStructure); // ³õÊ¼»¯TIM14
+    TIM_TimeBaseInit(TIM14, &TIM_TimeBaseInitStructure); // ï¿½ï¿½Ê¼ï¿½ï¿½TIM14
     TIM_ARRPreloadConfig(TIM2, DISABLE);
-    TIM_ITConfig(TIM14, TIM_IT_Update, ENABLE); // ÔÊÐí¶¨Ê±Æ÷3¸üÐÂÖÐ¶Ï
+    TIM_ITConfig(TIM14, TIM_IT_Update, ENABLE); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½3ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½
 
-    NVIC_InitStructure.NVIC_IRQChannel = TIM8_TRG_COM_TIM14_IRQn;              // ¶¨Ê±Æ÷3ÖÐ¶Ï
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01; // ÇÀÕ¼ÓÅÏÈ¼¶1
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x03;        // ×ÓÓÅÏÈ¼¶3
+    NVIC_InitStructure.NVIC_IRQChannel = TIM8_TRG_COM_TIM14_IRQn;              // ï¿½ï¿½Ê±ï¿½ï¿½3ï¿½Ð¶ï¿½
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01; // ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½È¼ï¿½1
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x03;        // ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½3
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
-    TIM_Cmd(TIM14, ENABLE); // Ê¹ÄÜ¶¨Ê±Æ÷3
+    TIM_Cmd(TIM14, ENABLE); // Ê¹ï¿½Ü¶ï¿½Ê±ï¿½ï¿½3
 }
 
-// ¶¨Ê±Æ÷3ÖÐ¶Ï·þÎñº¯Êý
+// ï¿½ï¿½Ê±ï¿½ï¿½3ï¿½Ð¶Ï·ï¿½ï¿½ï¿½ï¿½ï¿½
 void TIM8_TRG_COM_TIM14_IRQHandler(void)
 {
     static u8 flag = 0;
     static u8 duoji_index1 = 0;
     u16 temp;
 
-    if (TIM_GetITStatus(TIM14, TIM_IT_Update) != RESET) // Òç³öÖÐ¶Ï
+    if (TIM_GetITStatus(TIM14, TIM_IT_Update) != RESET) // ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½
     {
-        /* Í¨¹ý¸Ä±äÖØ×°ÔØÖµºÍ¶æ»úÏÂ±êË÷Òý£¬Ã¿¸ö¶æ»ú¶¨Ê±2500£¨2.5ms£©£¬Ö´ÐÐ8¸ö¶æ»úºóÍê³ÉÒ»¸öÖÜÆÚ20000£¨20ms£© */
+        /* Í¨ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½×°ï¿½ï¿½Öµï¿½Í¶ï¿½ï¿½ï¿½Â±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±2500ï¿½ï¿½2.5msï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½8ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½20000ï¿½ï¿½20msï¿½ï¿½ */
         if (duoji_index1 == 8)
         {
             duoji_index1 = 0;
@@ -208,7 +208,7 @@ void TIM8_TRG_COM_TIM14_IRQHandler(void)
         if (flag == 0)
         {
             temp = ((u16)(duoji_doing[duoji_index1].cur));
-            TIM14->ARR = temp; /* BUG  ²»ÄÜÊ¹ÓÃ±äÁ¿£¿ */
+            TIM14->ARR = temp; /* BUG  ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã±ï¿½ï¿½ï¿½ï¿½ï¿½ */
             servo_pin_set(duoji_index1, Bit_SET);
             servo_inc_offset(duoji_index1);
         }
@@ -221,7 +221,7 @@ void TIM8_TRG_COM_TIM14_IRQHandler(void)
         }
         flag = !flag;
     }
-    TIM_ClearITPendingBit(TIM14, TIM_IT_Update); // Çå³ýÖÐ¶Ï±êÖ¾Î»
+    TIM_ClearITPendingBit(TIM14, TIM_IT_Update); // ï¿½ï¿½ï¿½ï¿½Ð¶Ï±ï¿½Ö¾Î»
 }
 
-/******************* (C) °æÈ¨ 2022 XTARK **************************************/
+/******************* (C) ï¿½ï¿½È¨ 2022 XTARK **************************************/
