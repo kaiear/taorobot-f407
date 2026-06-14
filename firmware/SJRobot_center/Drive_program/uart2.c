@@ -5,8 +5,18 @@ static uint8_t uart2_rx_con=0;       //���ռ�����
 static uint8_t uart2_rx_checksum;    //֡ͷ����У���
 static uint8_t uart2_rx_buf[40];     //���ջ��壬��������С�ڵ���32Byte
 static uint8_t uart2_tx_buf[40];     //���ͻ���
+static uint8_t uart2_ping_match=0;
 
 uint8_t ros_servo_data=0;
+
+static void UART2_SendText(const char *text)
+{
+	while(*text)
+	{
+		USART_SendData(USART2, (uint8_t)(*text++));
+		while(USART_GetFlagStatus(USART2,USART_FLAG_TC) != SET);
+	}
+}
 
 
 
@@ -77,6 +87,23 @@ void USART2_IRQHandler(void)
 	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)  //�����ж�
 	{
 		Res =USART_ReceiveData(USART2);	
+		
+		if(Res == (uint8_t)"PING\n"[uart2_ping_match])
+		{
+			uart2_ping_match++;
+			if(uart2_ping_match >= 5)
+			{
+				uart2_ping_match = 0;
+				uart2_rx_con = 0;
+				UART2_SendText("PONG\n");
+				USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+				return;
+			}
+		}
+		else
+		{
+			uart2_ping_match = (Res == 'P') ? 1 : 0;
+		}
 		
 		if(uart2_rx_con < 3)    //==����֡ͷ + ����
 		{
@@ -331,5 +358,6 @@ void UART2_SendPacket(uint8_t *pbuf, uint8_t len, uint8_t num)
 		}
 	}
 }
+
 
 
