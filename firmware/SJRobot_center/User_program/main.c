@@ -52,6 +52,7 @@ int main(void)
 
 	UART2_Init(115200);
 	Delay_ms(5);
+	TaoV2_Init();
 
 	USART3_Init(115200);
 	Delay_ms(5);

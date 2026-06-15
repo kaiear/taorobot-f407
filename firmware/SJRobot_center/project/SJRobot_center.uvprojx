@@ -611,6 +611,11 @@
               <FilePath>..\Drive_program\uart2.c</FilePath>
             </File>
             <File>
+              <FileName>tao_protocol_v2.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drive_program\tao_protocol_v2.c</FilePath>
+            </File>
+            <File>
               <FileName>y_zx_uart3.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drive_program\y_zx_uart3.c</FilePath>

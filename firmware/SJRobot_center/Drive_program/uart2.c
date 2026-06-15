@@ -87,6 +87,7 @@ void USART2_IRQHandler(void)
 	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)  //�����ж�
 	{
 		Res =USART_ReceiveData(USART2);	
+		TaoV2_OnByte(Res);
 		
 		if(Res == (uint8_t)"PING\n"[uart2_ping_match])
 		{
@@ -358,6 +359,7 @@ void UART2_SendPacket(uint8_t *pbuf, uint8_t len, uint8_t num)
 		}
 	}
 }
+
 
 
 

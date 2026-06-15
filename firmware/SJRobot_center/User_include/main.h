@@ -15,6 +15,7 @@
 #include "can.h"
 #include "uart1.h"
 #include "uart2.h"
+#include "tao_protocol_v2.h"
 #include "y_zx_uart3.h"
 
 #include "y_motor.h" 
@@ -37,6 +38,7 @@ u8 mpu_dmp_init(void);
 
 void soft_reset(void);
 #endif
+
 
 
 

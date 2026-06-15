@@ -1,47 +1,48 @@
 #include "main.h"
 #include "usbh_usr.h"
+#include "y_beep.h"
 
-// »úÆ÷ÈËËÙ¶ÈÊý¾Ý
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½ï¿½ï¿½ï¿½ï¿½
 ROBOT_Velocity Vel;
 
-// »úÆ÷ÈËÂÖ×ÓÊý¾Ý
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 ROBOT_Wheel Wheel_A, Wheel_B, Wheel_C, Wheel_D;
 
-// »úÆ÷ÈËIMUÊý¾Ý
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IMUï¿½ï¿½ï¿½ï¿½
 ROBOT_Imu Imu;
 
-// »úÆ÷ÈËRGBÊý¾Ý
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½RGBï¿½ï¿½ï¿½ï¿½
 ROBOT_Light Light;
 
-// »úÆ÷ÈËµç³ØµçÑ¹Êý¾Ý
+// ï¿½ï¿½ï¿½ï¿½ï¿½Ëµï¿½Øµï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½
 uint16_t Bat_Vol;
 
-// IMUÊý¾Ý
+// IMUï¿½ï¿½ï¿½ï¿½
 int16_t imu_acc_data[3];
 int16_t imu_gyro_data[3];
 int16_t imu_gyro_offset[3];
 
-// »úÐµ±ÛÏà¹Ø±äÁ¿
-int16_t arm_angle[7] = {0, 0, 0, 0, 0, 0}; // »úÐµ±Û¹Ø½Ú½Ç¶È
-int16_t arm_angle_mid[7] = {0};			   // ×ÜÏß¶æ»úÖÐÖµ
+// ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½Ø±ï¿½ï¿½ï¿½
+int16_t arm_angle[7] = {0, 0, 0, 0, 0, 0}; // ï¿½ï¿½Ðµï¿½Û¹Ø½Ú½Ç¶ï¿½
+int16_t arm_angle_mid[7] = {0};			   // ï¿½ï¿½ï¿½ß¶ï¿½ï¿½ï¿½ï¿½Öµ
 
-// »úÐµ±ÛÏà¹Ø±äÁ¿
+// ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½Ø±ï¿½ï¿½ï¿½
 ros_servo_t ros_servo;
 
-// µç»úPID¿ØÖÆ²ÎÊý
+// ï¿½ï¿½ï¿½PIDï¿½ï¿½ï¿½Æ²ï¿½ï¿½ï¿½
 int16_t motor_kp = 800;
 int16_t motor_kd = 400;
 
-// IMUÐ£×¼±êÖ¾Î»
+// IMUÐ£×¼ï¿½ï¿½Ö¾Î»
 int8_t imu_calibrate_flag = 0;
 
-// ´®¿ÚÊä³ö±êÖ¾Î», 0Îª´®¿Ú2, 1Îª´®¿Ú3
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾Î», 0Îªï¿½ï¿½ï¿½ï¿½2, 1Îªï¿½ï¿½ï¿½ï¿½3
 int8_t uart_flag = 0;
 
-// °¢¿ËÂü»úÆ÷ÈË×¨ÓÃ£¬×ªÏòÊý¾Ý
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¨ï¿½Ã£ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 ROBOT_Steering RobotStr;
 
-// °¢¿ËÂü»úÆ÷ÈË×¨ÓÃ£¬×ªÏòÊý¾Ý
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¨ï¿½Ã£ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 int16_t servo_offset = 0;
 
 int16_t times = 0;
@@ -50,73 +51,134 @@ int16_t off_time = 0;
 
 blance_samp blance_sampPara = blance_samp_DEFAULTS;
 
-// º¯Êý¶¨Òå
-void ROBOT_IMUHandle(void);		// IMUÊý¾Ý´¦Àí
-void ROBOT_SendDataToRos(void); // ·¢ËÍÊý¾Ý
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+void ROBOT_IMUHandle(void);		// IMUï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½
+void ROBOT_SendDataToRos(void); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+void ROBOT_BeepHandle(void);
+
+void ROBOT_BeepHandle(void)
+{
+	static uint8_t beep_active = 0;
+	static uint8_t beep_is_on = 0;
+	static int16_t beep_remaining = 0;
+	static u32 beep_next_ms = 0;
+	static int16_t beep_on_time = 100;
+	static int16_t beep_off_time = 100;
+	u32 now = millis();
+
+	if (times > 0)
+	{
+		beep_remaining = times;
+		beep_on_time = (on_time > 0) ? on_time : 100;
+		beep_off_time = (off_time > 0) ? off_time : beep_on_time;
+		beep_active = 1;
+		beep_is_on = 0;
+		beep_next_ms = now;
+
+		times = 0;
+		on_time = 0;
+		off_time = 0;
+		BEEP_Off();
+	}
+
+	if (!beep_active || ((int32_t)(now - beep_next_ms) < 0))
+	{
+		return;
+	}
+
+	if (!beep_is_on)
+	{
+		if (beep_remaining <= 0)
+		{
+			beep_active = 0;
+			BEEP_Off();
+			return;
+		}
+
+		BEEP_On();
+		beep_is_on = 1;
+		beep_next_ms = now + beep_on_time;
+	}
+	else
+	{
+		BEEP_Off();
+		beep_is_on = 0;
+		beep_remaining--;
+		if (beep_remaining <= 0)
+		{
+			beep_active = 0;
+		}
+		else
+		{
+			beep_next_ms = now + beep_off_time;
+		}
+	}
+}
 
 /**
- * @¼ò  Êö  »úÆ÷ÈË¹ÜÀíÈÎÎñ
- * @²Î  Êý  ÎÞ
- * @·µ»ØÖµ  ÎÞ
+ * @ï¿½ï¿½  ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½ï¿½Ë¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @ï¿½ï¿½  ï¿½ï¿½  ï¿½ï¿½
+ * @ï¿½ï¿½ï¿½ï¿½Öµ  ï¿½ï¿½
  */
 void Robot_Task(void)
 {
 	if (ros_servo_data==1)
 	{ 
 		ros_servo_data=0;
-		// »úÆ÷ÈË»úÐµ±Û¿ØÖÆ
+		// ï¿½ï¿½ï¿½ï¿½ï¿½Ë»ï¿½Ðµï¿½Û¿ï¿½ï¿½ï¿½
 		duoji_set(arm_angle[0], arm_angle[1], arm_angle[2], arm_angle[3], arm_angle[4], arm_angle[5]);
 //		printf("J0%d J1%d J2%d J3%d J4%d J5%d \r\n ",ros_servo.angle[0],ros_servo.angle[1], ros_servo.angle[2],ros_servo.angle[3],ros_servo.angle[4],ros_servo.angle[5]  );
 	
 	}
-	// »úÆ÷ÈËÔË¶¯Ñ§´¦Àí
+	ROBOT_BeepHandle();
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½Ñ§ï¿½ï¿½ï¿½ï¿½
 	ROBOT_Kinematics();
 
-	// »ñÈ¡PMU6050¼ÓËÙ¶ÈÊý¾Ý
+	// ï¿½ï¿½È¡PMU6050ï¿½ï¿½ï¿½Ù¶ï¿½ï¿½ï¿½ï¿½ï¿½
 	ROBOT_IMUHandle();
 
-	// Êý¾Ý·¢ËÍ
+	// ï¿½ï¿½ï¿½Ý·ï¿½ï¿½ï¿½
 	ROBOT_SendDataToRos();
 }
 
 /**
- * @¼ò  Êö  »úÆ÷ÈËIMUÊý¾Ý´¦Àí
- * @²Î  Êý  ÎÞ
- * @·µ»ØÖµ  ÎÞ
+ * @ï¿½ï¿½  ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IMUï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½
+ * @ï¿½ï¿½  ï¿½ï¿½  ï¿½ï¿½
+ * @ï¿½ï¿½ï¿½ï¿½Öµ  ï¿½ï¿½
  */
 void ROBOT_IMUHandle(void)
 {
-	MPU_Get_Accelerometer(imu_acc_data); // µÃµ½¼ÓËÙ¶È´«¸ÐÆ÷Êý¾Ý
+	MPU_Get_Accelerometer(imu_acc_data); // ï¿½Ãµï¿½ï¿½ï¿½ï¿½Ù¶È´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-	Imu.ACC_X = imu_acc_data[1];  // ROS×ø±êXÖá¶ÔÓ¦IMUµÄYÖá
-	Imu.ACC_Y = -imu_acc_data[0]; // ROS×ø±êYÖá¶ÔÓ¦IMUµÄXÖá·´Ïò
-	Imu.ACC_Z = imu_acc_data[2];  // ROS×ø±êZÖá¶ÔÓ¦IMUµÄZÖá
+	Imu.ACC_X = imu_acc_data[1];  // ROSï¿½ï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½Ó¦IMUï¿½ï¿½Yï¿½ï¿½
+	Imu.ACC_Y = -imu_acc_data[0]; // ROSï¿½ï¿½ï¿½ï¿½Yï¿½ï¿½ï¿½Ó¦IMUï¿½ï¿½Xï¿½á·´ï¿½ï¿½
+	Imu.ACC_Z = imu_acc_data[2];  // ROSï¿½ï¿½ï¿½ï¿½Zï¿½ï¿½ï¿½Ó¦IMUï¿½ï¿½Zï¿½ï¿½
 
-	MPU_Get_Gyroscope(imu_gyro_data); // µÃµ½ÍÓÂÝÒÇÊý¾Ý
+	MPU_Get_Gyroscope(imu_gyro_data); // ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-	imu_gyro_data[0] += imu_gyro_offset[0]; // ÍÓÂÝÒÇ¼ÓÈëÁãÆ±Ð£×¼Êý¾Ý
+	imu_gyro_data[0] += imu_gyro_offset[0]; // ï¿½ï¿½ï¿½ï¿½ï¿½Ç¼ï¿½ï¿½ï¿½ï¿½ï¿½Æ±Ð£×¼ï¿½ï¿½ï¿½ï¿½
 	imu_gyro_data[1] += imu_gyro_offset[1];
 	imu_gyro_data[2] += imu_gyro_offset[2];
 	//
 	
-	Imu.GYRO_X = imu_gyro_data[1];	// ROS×ø±êXÖá¶ÔÓ¦IMUµÄYÖá
-	Imu.GYRO_Y = -imu_gyro_data[0]; // ROS×ø±êYÖá¶ÔÓ¦IMUµÄXÖá·´Ïò
-	Imu.GYRO_Z = imu_gyro_data[2];	// ROS×ø±êZÖá¶ÔÓ¦IMUµÄZÖá
+	Imu.GYRO_X = imu_gyro_data[1];	// ROSï¿½ï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½Ó¦IMUï¿½ï¿½Yï¿½ï¿½
+	Imu.GYRO_Y = -imu_gyro_data[0]; // ROSï¿½ï¿½ï¿½ï¿½Yï¿½ï¿½ï¿½Ó¦IMUï¿½ï¿½Xï¿½á·´ï¿½ï¿½
+	Imu.GYRO_Z = imu_gyro_data[2];	// ROSï¿½ï¿½ï¿½ï¿½Zï¿½ï¿½ï¿½Ó¦IMUï¿½ï¿½Zï¿½ï¿½
 //	printf("%d\r\n",Imu.GYRO_Z);
 	//	mpu_dmp_get_data(&blance_sampPara.gpitch, &blance_sampPara.groll, &blance_sampPara.gyaw,&blance_sampPara.gGyro1, &blance_sampPara.gGyro2,&blance_sampPara.gGyro3,&blance_sampPara.gAx, &blance_sampPara.gAy, &blance_sampPara.gAz);
 }
 
 /**
- * @¼ò  Êö  »úÆ÷ÈË·¢ËÍÊý¾Ýµ½ROS
- * @²Î  Êý  ÎÞ
- * @·µ»ØÖµ  ÎÞ
+ * @ï¿½ï¿½  ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½ROS
+ * @ï¿½ï¿½  ï¿½ï¿½  ï¿½ï¿½
+ * @ï¿½ï¿½ï¿½ï¿½Öµ  ï¿½ï¿½
  */
 void ROBOT_SendDataToRos(void)
 {
-	// ´®¿Ú·¢ËÍÊý¾Ý
+	// ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	static uint8_t comdata[32];
 
-	// ¼ÓËÙ¶È = (ax_acc/32768) * 2G
+	// ï¿½ï¿½ï¿½Ù¶ï¿½ = (ax_acc/32768) * 2G
 	comdata[0] = (u8)(Imu.ACC_X >> 8);
 	comdata[1] = (u8)(Imu.ACC_X);
 	comdata[2] = (u8)(Imu.ACC_Y >> 8);
@@ -124,7 +186,7 @@ void ROBOT_SendDataToRos(void)
 	comdata[4] = (u8)(Imu.ACC_Z >> 8);
 	comdata[5] = (u8)(Imu.ACC_Z);
 
-	// ÍÓÂÝÒÇ½ÇËÙ¶È = (ax_gyro/32768) * 500
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ç½ï¿½ï¿½Ù¶ï¿½ = (ax_gyro/32768) * 500
 	comdata[6] = (u8)(Imu.GYRO_X >> 8);
 	comdata[7] = (u8)(Imu.GYRO_X);
 	comdata[8] = (u8)(Imu.GYRO_Y >> 8);
@@ -132,7 +194,7 @@ void ROBOT_SendDataToRos(void)
 	comdata[10] = (u8)(Imu.GYRO_Z >> 8);
 	comdata[11] = (u8)(Imu.GYRO_Z);
 //	printf("aaa%d\r\n",Imu.GYRO_Z);
-	// »úÆ÷ÈËËÙ¶ÈÖµ µ¥Î»Îªm/s£¬·Å´ó1000±¶
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½Öµ ï¿½ï¿½Î»Îªm/sï¿½ï¿½ï¿½Å´ï¿½1000ï¿½ï¿½
 	comdata[12] = (u8)(Vel.RT_IX >> 8);
 	comdata[13] = (u8)(Vel.RT_IX);
 	comdata[14] = (u8)(Vel.RT_IY >> 8);
@@ -153,7 +215,7 @@ void ROBOT_SendDataToRos(void)
 	comdata[28] = (u8)((1500-ros_servo.pwm[5]) >> 8);
 	comdata[29] = (u8)((1500-ros_servo.pwm[5]));
 	
-	// µç³ØµçÑ¹
+	// ï¿½ï¿½Øµï¿½Ñ¹
 	comdata[30] = (u8)(Bat_Vol >> 8);
 	comdata[31] = (u8)(Bat_Vol);
 
@@ -161,46 +223,46 @@ void ROBOT_SendDataToRos(void)
 }
 
 /**
- * @¼ò  Êö  µçÁ¿¹ÜÀíÈÎÎñ
- * @²Î  Êý  ÎÞ
- * @·µ»ØÖµ  ÎÞ
+ * @ï¿½ï¿½  ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @ï¿½ï¿½  ï¿½ï¿½  ï¿½ï¿½
+ * @ï¿½ï¿½ï¿½ï¿½Öµ  ï¿½ï¿½
  */
 void Bat_Task()
 {
-	// ¼ÆÊý±äÁ¿
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	static uint16_t bat_vol_cnt = 0;
 
 	while (1)
 	{
-		// ²É¼¯µç³ØµçÑ¹
+		// ï¿½É¼ï¿½ï¿½ï¿½Øµï¿½Ñ¹
 		Bat_Vol = VIN_GetVol_X100();
 
-		// µ÷ÊÔÊä³öµç³ØµçÑ¹Êý¾Ý
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½
 		// printf("@ %d  \r\n",R_Bat_Vol);
 
-		// µçÁ¿µÍÓÚ40%
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½40%
 		if (Bat_Vol < VBAT_40P)
 		{
-			// µçÁ¿µÍÓÚ20%
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½20%
 			if (Bat_Vol < VBAT_20P)
 			{
 
-				// µçÁ¿µÍÓÚ10%£¬¹Ø±ÕÏµÍ³½øÈë±£»¤×´Ì¬
+				// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½10%ï¿½ï¿½ï¿½Ø±ï¿½ÏµÍ³ï¿½ï¿½ï¿½ë±£ï¿½ï¿½×´Ì¬
 				if (Bat_Vol < VBAT_10P) // 990
 				{
-					// µÍÑ¹Ê±¼ä¼ÆÊý
+					// ï¿½ï¿½Ñ¹Ê±ï¿½ï¿½ï¿½ï¿½ï¿½
 					bat_vol_cnt++;
 
-					// ³¬¹ý10´Î£¬½øÈë¹Ø±Õ×´Ì¬
+					// ï¿½ï¿½ï¿½ï¿½10ï¿½Î£ï¿½ï¿½ï¿½ï¿½ï¿½Ø±ï¿½×´Ì¬
 					if (bat_vol_cnt > 10)
 					{
-						// µç»úËÙ¶ÈÉèÖÃÎª0
+						// ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½ï¿½ï¿½ï¿½ï¿½Îª0
 						MOTOR_A_SetSpeed(0);
 						MOTOR_B_SetSpeed(0);
 						MOTOR_C_SetSpeed(0);
 						MOTOR_D_SetSpeed(0);
 
-						// ·äÃùÆ÷Ãù½Ð±¨¾¯
+						// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½
 						while (1)
 						{
 							BEEP_On();
@@ -221,22 +283,22 @@ void Bat_Task()
 }
 
 /**
- * @¼ò  Êö  °´¼ü´¦ÀíÈÎÎñ
- * @²Î  Êý  ÎÞ
- * @·µ»ØÖµ  ÎÞ
+ * @ï¿½ï¿½  ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @ï¿½ï¿½  ï¿½ï¿½  ï¿½ï¿½
+ * @ï¿½ï¿½ï¿½ï¿½Öµ  ï¿½ï¿½
  */
 void Key_Task()
 {
 	while (1)
 	{
-		// °´¼üÉ¨Ãè
+		// ï¿½ï¿½ï¿½ï¿½É¨ï¿½ï¿½
 		if (KEY_Scan() == 0)
 		{
 			Delay_ms(5);
-			// È·¶¨°´¼ü°´ÏÂ
+			// È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			if (KEY_Scan() == 0)
 			{
-				// µÈ´ý°´¼üÌ§Æð
+				// ï¿½È´ï¿½ï¿½ï¿½ï¿½ï¿½Ì§ï¿½ï¿½
 				while (KEY_Scan() == 0)
 				{
 					Delay_ms(5);
@@ -247,25 +309,25 @@ void Key_Task()
 }
 
 /**
- * @¼ò  Êö  ×ËÌ¬Ð£×¼ÈÎÎñ
- * @²Î  Êý  ÎÞ
- * @·µ»ØÖµ  ÎÞ
+ * @ï¿½ï¿½  ï¿½ï¿½  ï¿½ï¿½Ì¬Ð£×¼ï¿½ï¿½ï¿½ï¿½
+ * @ï¿½ï¿½  ï¿½ï¿½  ï¿½ï¿½
+ * @ï¿½ï¿½ï¿½ï¿½Öµ  ï¿½ï¿½
  */
 void Imu_Task()
 {
 	uint8_t i;
 
-	// ÍÓÂÝÒÇÐ£×¼±äÁ¿
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£×¼ï¿½ï¿½ï¿½ï¿½
 	static int16_t gyro_data[3];
 
 	while (1)
 	{
 
-		// ¼ì²âIMUÐ£×¼±êÖ¾Î»
+		// ï¿½ï¿½ï¿½IMUÐ£×¼ï¿½ï¿½Ö¾Î»
 		if (imu_calibrate_flag > 0)
 		{
 
-			// ·äÃùÆ÷ÌáÊ¾
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾
 			BEEP_On();
 			Delay_ms(5);
 			BEEP_Off();
@@ -274,32 +336,32 @@ void Imu_Task()
 			imu_gyro_offset[1] = 0;
 			imu_gyro_offset[2] = 0;
 
-			// ÍÓÂÝÒÇÐ£×¼
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£×¼
 			for (i = 0; i < 10; i++)
 			{
-				// ÑÓÊ±º¯Êý
+				// ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½
 				Delay_ms(5);
 
-				// »ñÈ¡PMU6050ÍÓÂÝÒÇÊý¾Ý
+				// ï¿½ï¿½È¡PMU6050ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				//				MPU_Get_Gyroscope(gyro_data);
 
-				// ¼ÆËãÆ«²îºÍ
+				// ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½
 				imu_gyro_offset[0] += gyro_data[0];
 				imu_gyro_offset[1] += gyro_data[1];
 				imu_gyro_offset[2] += gyro_data[2];
 			}
 
-			// ¼ÆËãÆ½¾ùÆ«²îÖµ
+			// ï¿½ï¿½ï¿½ï¿½Æ½ï¿½ï¿½Æ«ï¿½ï¿½Öµ
 			imu_gyro_offset[0] = -imu_gyro_offset[0] / 10;
 			imu_gyro_offset[1] = -imu_gyro_offset[1] / 10;
 			imu_gyro_offset[2] = -imu_gyro_offset[2] / 10;
 
-			// ·äÃùÆ÷ÌáÊ¾
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾
 			BEEP_On();
 			Delay_ms(5);
 			BEEP_Off();
 
-			// ¸´Î»IMUÐ£×¼±êÖ¾Î»
+			// ï¿½ï¿½Î»IMUÐ£×¼ï¿½ï¿½Ö¾Î»
 			imu_calibrate_flag = 0;
 		}
 	}
