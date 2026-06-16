@@ -72,14 +72,17 @@ static uint16_t TaoV2_ArmAngleToPwm(uint8_t index, int16_t angle, uint8_t *clamp
 {
     int32_t pwm;
     uint16_t limited_pwm;
+    int32_t home_pwm;
+
+    home_pwm = servo_home_pwm(index);
 
     if(index == 2)
     {
-        pwm = 1500 + ((int32_t)angle * 1000) / 2356;
+        pwm = home_pwm + ((int32_t)angle * 1000) / 2356;
     }
     else
     {
-        pwm = 1500 - ((int32_t)angle * 1000) / 2356;
+        pwm = home_pwm - ((int32_t)angle * 1000) / 2356;
     }
 
     if(pwm < 0)
@@ -290,7 +293,7 @@ static void TaoV2_HandleGripper(void)
         clamped = 1;
     }
 
-    arm_angle[5] = (int16_t)((int32_t)percent * 1000 / 100);
+    arm_angle[5] = (int16_t)(-((int32_t)percent * 1000 / 100));
     ros_servo.pwm[5] = TaoV2_ArmAngleToPwm(5, arm_angle[5], &clamped);
     ros_servo.time[5] = 50;
     ros_servo_data = 1;
