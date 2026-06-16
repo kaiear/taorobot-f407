@@ -51,5 +51,9 @@
 void TaoV2_Init(void);
 void TaoV2_OnByte(uint8_t data);
 void TaoV2_SendStatus(void);
+uint8_t TaoV2_GetMode(void);
+uint8_t TaoV2_SetMode(uint8_t mode);
+uint8_t TaoV2_IsRosAutoActive(void);
+void TaoV2_SafetyTick(void);
 
 #endif

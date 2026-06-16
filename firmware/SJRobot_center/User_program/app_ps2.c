@@ -119,6 +119,14 @@ void app_ps2(void)
     static u16 ps2_debug_count = 0;
 #endif
 
+    if (TaoV2_GetMode() != TAO_V2_MODE_MANUAL)
+    {
+        ps2_lost_count = 0;
+        ps2_do_ok = 0;
+        ps2_status_flag = 0xffff;
+        return;
+    }
+
     // 或者ps2没有读取数据，直接返回
     if (!ps2_do_ok)
     {

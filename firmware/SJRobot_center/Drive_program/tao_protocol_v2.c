@@ -23,6 +23,9 @@ static uint8_t tao_v2_arm_state = 0;
 static uint8_t tao_v2_buzzer_state = 0;
 static uint8_t tao_v2_last_arm_seq = 0;
 static uint16_t tao_v2_error_code = TAO_V2_ERR_OK;
+static uint32_t tao_v2_last_heartbeat_ms = 0;
+
+#define TAO_V2_HEARTBEAT_TIMEOUT_MS 500
 
 static uint8_t TaoV2_CrcUpdate(uint8_t crc, uint8_t data)
 {
@@ -209,12 +212,50 @@ static uint8_t TaoV2_RequireRosAuto(uint8_t type)
     return 1;
 }
 
+static uint8_t TaoV2_IsValidMode(uint8_t mode)
+{
+    return (mode == TAO_V2_MODE_MANUAL ||
+            mode == TAO_V2_MODE_ROS_AUTO ||
+            mode == TAO_V2_MODE_ESTOP ||
+            mode == TAO_V2_MODE_SAFE_IDLE);
+}
+
 static void TaoV2_StopRobot(void)
 {
     Vel.TG_IX = 0;
     Vel.TG_IY = 0;
     Vel.TG_IW = 0;
     tao_v2_base_state = 0;
+}
+
+uint8_t TaoV2_GetMode(void)
+{
+    return tao_v2_mode;
+}
+
+uint8_t TaoV2_SetMode(uint8_t mode)
+{
+    if(!TaoV2_IsValidMode(mode))
+    {
+        return 0;
+    }
+
+    TaoV2_StopRobot();
+    tao_v2_mode = mode;
+    if(mode == TAO_V2_MODE_ROS_AUTO)
+    {
+        tao_v2_last_heartbeat_ms = millis();
+        tao_v2_error_code = TAO_V2_ERR_OK;
+    }
+    return 1;
+}
+
+uint8_t TaoV2_IsRosAutoActive(void)
+{
+    uint32_t now = millis();
+
+    return (tao_v2_mode == TAO_V2_MODE_ROS_AUTO &&
+            (uint32_t)(now - tao_v2_last_heartbeat_ms) <= TAO_V2_HEARTBEAT_TIMEOUT_MS);
 }
 
 static void TaoV2_HandleBaseVel(void)
@@ -351,12 +392,15 @@ static void TaoV2_Dispatch(void)
         case TAO_V2_TYPE_SET_MODE:
             if(TaoV2_RequireLen(TAO_V2_TYPE_SET_MODE, 1))
             {
-                tao_v2_mode = tao_v2_payload[0];
-                if(tao_v2_mode == TAO_V2_MODE_ESTOP || tao_v2_mode == TAO_V2_MODE_SAFE_IDLE)
+                if(TaoV2_SetMode(tao_v2_payload[0]))
                 {
-                    TaoV2_StopRobot();
+                    TaoV2_SendAck(TAO_V2_TYPE_SET_MODE, TAO_V2_ACK_OK);
                 }
-                TaoV2_SendAck(TAO_V2_TYPE_SET_MODE, TAO_V2_ACK_OK);
+                else
+                {
+                    TaoV2_SendAck(TAO_V2_TYPE_SET_MODE, TAO_V2_ACK_REJECTED);
+                    TaoV2_SendError(TAO_V2_ERR_BAD_MODE, tao_v2_payload[0]);
+                }
             }
             break;
 
@@ -399,6 +443,7 @@ static void TaoV2_Dispatch(void)
         case TAO_V2_TYPE_HEARTBEAT:
             if(TaoV2_RequireLen(TAO_V2_TYPE_HEARTBEAT, 1))
             {
+                tao_v2_last_heartbeat_ms = millis();
                 tao_v2_error_code = TAO_V2_ERR_OK;
             }
             break;
@@ -414,6 +459,27 @@ void TaoV2_Init(void)
     TaoV2_ResetRx();
     tao_v2_mode = TAO_V2_MODE_SAFE_IDLE;
     tao_v2_error_code = TAO_V2_ERR_OK;
+    tao_v2_last_heartbeat_ms = millis();
+}
+
+void TaoV2_SafetyTick(void)
+{
+    uint32_t now = millis();
+
+    if(tao_v2_mode == TAO_V2_MODE_ESTOP || tao_v2_mode == TAO_V2_MODE_SAFE_IDLE)
+    {
+        TaoV2_StopRobot();
+        return;
+    }
+
+    if(tao_v2_mode == TAO_V2_MODE_ROS_AUTO &&
+       (uint32_t)(now - tao_v2_last_heartbeat_ms) > TAO_V2_HEARTBEAT_TIMEOUT_MS)
+    {
+        TaoV2_StopRobot();
+        tao_v2_mode = TAO_V2_MODE_SAFE_IDLE;
+        tao_v2_error_code = TAO_V2_ERR_BASE_TIMEOUT;
+        TaoV2_SendError(TAO_V2_ERR_BASE_TIMEOUT, TAO_V2_TYPE_HEARTBEAT);
+    }
 }
 
 void TaoV2_OnByte(uint8_t data)

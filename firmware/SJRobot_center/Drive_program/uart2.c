@@ -157,9 +157,12 @@ void USART2_IRQHandler(void)
 					//�ٶȿ���֡
 					if(uart2_rx_buf[3] == ID_ROS2STM_VEL)
 					{
-						Vel.TG_IX = (int16_t)((uart2_rx_buf[4]<<8) | uart2_rx_buf[5]);
-						Vel.TG_IY = (int16_t)((uart2_rx_buf[6]<<8) | uart2_rx_buf[7]);
-						Vel.TG_IW = (int16_t)((uart2_rx_buf[8]<<8) | uart2_rx_buf[9]);
+						if(TaoV2_IsRosAutoActive())
+						{
+							Vel.TG_IX = (int16_t)((uart2_rx_buf[4]<<8) | uart2_rx_buf[5]);
+							Vel.TG_IY = (int16_t)((uart2_rx_buf[6]<<8) | uart2_rx_buf[7]);
+							Vel.TG_IW = (int16_t)((uart2_rx_buf[8]<<8) | uart2_rx_buf[9]);
+						}
 					}
 					else
 					{
@@ -359,7 +362,3 @@ void UART2_SendPacket(uint8_t *pbuf, uint8_t len, uint8_t num)
 		}
 	}
 }
-
-
-
-

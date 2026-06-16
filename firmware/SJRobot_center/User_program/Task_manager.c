@@ -54,6 +54,7 @@ void Execute_Task_List_RUN(void)
 void HFPeriod_1msTask(void) // ±∏”√
 {
 	static uint8_t temp_flag = 0;
+	TaoV2_SafetyTick();
 	app_ps2();
 	USBH_Process(&USB_OTG_Core_dev, &USB_Host);
 
