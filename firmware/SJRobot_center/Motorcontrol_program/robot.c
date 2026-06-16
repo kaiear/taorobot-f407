@@ -49,12 +49,45 @@ int16_t times = 0;
 int16_t on_time = 0;
 int16_t off_time = 0;
 
+typedef struct
+{
+	uint16_t on_ms;
+	uint16_t off_ms;
+} BEEP_RhythmStep;
+
+static const BEEP_RhythmStep beep_face_success_music[] = {
+	{80, 60}, {80, 80}, {80, 60}, {80, 80}, {180, 180},
+	{80, 60}, {80, 80}, {80, 60}, {80, 80}, {180, 180},
+	{60, 50}, {60, 50}, {60, 50}, {60, 50}, {220, 180},
+	{80, 60}, {160, 80}, {80, 60}, {260, 220},
+	{70, 50}, {70, 50}, {70, 50}, {70, 50}, {220, 120}, {360, 0},
+};
+
+#define BEEP_FACE_SUCCESS_MUSIC_LEN (sizeof(beep_face_success_music) / sizeof(beep_face_success_music[0]))
+
+static uint8_t beep_music_active = 0;
+static uint8_t beep_music_is_on = 0;
+static uint8_t beep_music_index = 0;
+static u32 beep_music_next_ms = 0;
+
 blance_samp blance_sampPara = blance_samp_DEFAULTS;
 
 // ��������
 void ROBOT_IMUHandle(void);		// IMU���ݴ���
 void ROBOT_SendDataToRos(void); // ��������
 void ROBOT_BeepHandle(void);
+
+void ROBOT_BeepFaceSuccess(void)
+{
+	times = 0;
+	on_time = 0;
+	off_time = 0;
+	beep_music_active = 1;
+	beep_music_is_on = 0;
+	beep_music_index = 0;
+	beep_music_next_ms = millis();
+	BEEP_Off();
+}
 
 void ROBOT_BeepHandle(void)
 {
@@ -68,6 +101,7 @@ void ROBOT_BeepHandle(void)
 
 	if (times > 0)
 	{
+		beep_music_active = 0;
 		beep_remaining = times;
 		beep_on_time = (on_time > 0) ? on_time : 100;
 		beep_off_time = (off_time > 0) ? off_time : beep_on_time;
@@ -79,6 +113,39 @@ void ROBOT_BeepHandle(void)
 		on_time = 0;
 		off_time = 0;
 		BEEP_Off();
+	}
+
+	if (beep_music_active)
+	{
+		beep_active = 0;
+
+		if ((int32_t)(now - beep_music_next_ms) < 0)
+		{
+			return;
+		}
+
+		if (beep_music_index >= BEEP_FACE_SUCCESS_MUSIC_LEN)
+		{
+			beep_music_active = 0;
+			beep_music_is_on = 0;
+			BEEP_Off();
+			return;
+		}
+
+		if (!beep_music_is_on)
+		{
+			BEEP_On();
+			beep_music_is_on = 1;
+			beep_music_next_ms = now + beep_face_success_music[beep_music_index].on_ms;
+		}
+		else
+		{
+			BEEP_Off();
+			beep_music_is_on = 0;
+			beep_music_next_ms = now + beep_face_success_music[beep_music_index].off_ms;
+			beep_music_index++;
+		}
+		return;
 	}
 
 	if (!beep_active || ((int32_t)(now - beep_next_ms) < 0))

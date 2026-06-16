@@ -432,9 +432,16 @@ static void TaoV2_Dispatch(void)
         case TAO_V2_TYPE_BUZZER:
             if(TaoV2_RequireLen(TAO_V2_TYPE_BUZZER, 2))
             {
-                times = tao_v2_payload[1];
-                on_time = 100;
-                off_time = 100;
+                if(tao_v2_payload[0] == 2)
+                {
+                    ROBOT_BeepFaceSuccess();
+                }
+                else
+                {
+                    times = tao_v2_payload[1];
+                    on_time = 100;
+                    off_time = 100;
+                }
                 tao_v2_buzzer_state = tao_v2_payload[0];
                 TaoV2_SendAck(TAO_V2_TYPE_BUZZER, TAO_V2_ACK_OK);
             }

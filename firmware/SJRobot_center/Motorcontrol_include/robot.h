@@ -232,5 +232,6 @@ void Bat_Task(void);
 void Key_Task(void);
 void Imu_Task(void);
 void ROBOT_ArmControl(void);
+void ROBOT_BeepFaceSuccess(void);
 #endif
 
