@@ -94,53 +94,16 @@ static short ps2_axis_to_speed(u8 raw_value, short scale, short limit)
     return ps2_limit_speed(value, limit);
 }
 
-static void ps2_next_speed_gear(void)
+static u8 ps2_left_stick_active(void)
 {
-    ps2_speed_gear++;
-    if (ps2_speed_gear >= PS2_SPEED_GEAR_NUM)
-        ps2_speed_gear = 0;
+    return (abs(128 - ps2_buf[0]) > PS2_DEADZONE ||
+            abs(128 - ps2_buf[1]) > PS2_DEADZONE);
 }
 
-static void ps2_toggle_protect_mode(void)
+static void ps2_decode_buttons(void)
 {
-    if (ps2_protect_mode)
-        ps2_protect_mode = PS2_PROTECT_OFF;
-    else
-        ps2_protect_mode = PS2_PROTECT_ON;
-
-    ps2_stop_chassis();
-}
-
-void app_ps2(void)
-{
-    uint16_t pos;
-    static u16 ps2_lost_count = 0;
-#if PS2_DEBUG_PRINT
-    static u16 ps2_debug_count = 0;
-#endif
-
-    if (TaoV2_GetMode() != TAO_V2_MODE_MANUAL)
-    {
-        ps2_lost_count = 0;
-        ps2_do_ok = 0;
-        ps2_status_flag = 0xffff;
-        return;
-    }
-
-    // 或者ps2没有读取数据，直接返回
-    if (!ps2_do_ok)
-    {
-        if (ps2_lost_count < PS2_TIMEOUT_COUNT)
-            ps2_lost_count++;
-        else
-            ps2_stop_chassis();
-        return;
-    }
-    ps2_lost_count = 0;
-    ps2_do_ok = 0;
-
     ps2_cmd_last = ps2_cmd;
-    /* 判断手柄数据，更改为匹配以前代码的格式 */
+
     if (ps2_buf[6] & 0x01) /* L2 */
         ps2_cmd &= ~0X0001;
     else
@@ -220,6 +183,60 @@ void app_ps2(void)
         ps2_cmd &= ~0X8000;
     else
         ps2_cmd |= 0X8000;
+}
+
+static void ps2_next_speed_gear(void)
+{
+    ps2_speed_gear++;
+    if (ps2_speed_gear >= PS2_SPEED_GEAR_NUM)
+        ps2_speed_gear = 0;
+}
+
+static void ps2_toggle_protect_mode(void)
+{
+    if (ps2_protect_mode)
+        ps2_protect_mode = PS2_PROTECT_OFF;
+    else
+        ps2_protect_mode = PS2_PROTECT_ON;
+
+    ps2_stop_chassis();
+}
+
+void app_ps2(void)
+{
+    uint16_t pos;
+    static u16 ps2_lost_count = 0;
+#if PS2_DEBUG_PRINT
+    static u16 ps2_debug_count = 0;
+#endif
+
+    // 或者ps2没有读取数据，直接返回
+    if (!ps2_do_ok)
+    {
+        if (TaoV2_GetMode() == TAO_V2_MODE_MANUAL && ps2_lost_count < PS2_TIMEOUT_COUNT)
+            ps2_lost_count++;
+        else if (TaoV2_GetMode() == TAO_V2_MODE_MANUAL)
+            ps2_stop_chassis();
+        return;
+    }
+    ps2_lost_count = 0;
+    ps2_do_ok = 0;
+
+    ps2_decode_buttons();
+
+    if (TaoV2_GetMode() != TAO_V2_MODE_MANUAL)
+    {
+        ps2_status_flag = 0xffff;
+        if (TaoV2_GetMode() == TAO_V2_MODE_SAFE_IDLE && ps2_left_stick_active())
+        {
+            TaoV2_SetMode(TAO_V2_MODE_MANUAL);
+            ps2_protect_mode = PS2_PROTECT_OFF;
+        }
+        else
+        {
+            return;
+        }
+    }
 
     if (ps2_cmd != ps2_cmd_last)
     {
